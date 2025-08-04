@@ -3,10 +3,11 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import {z} from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Link } from 'react-router'
 
 // Define the type for the form data using zod's infer utility
 // This will automatically infer the type from the SignInSchema
@@ -34,7 +35,7 @@ const SignIn = () => {
   return (
     <div className='min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4'>
       <Card className='w-full max-w-md p-6 bg-white shadow-xl'>
-        <CardHeader className='mb-4'>
+        <CardHeader>
           <CardTitle className='text-center text-2xl font-bold'>Sign In</CardTitle>
           <CardDescription className='text-center text-sm text-muted-foreground'>
             Please enter your email and password to sign in.  
@@ -58,7 +59,10 @@ const SignIn = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                   <div className='flex items-center justify-between'>
+                   <FormLabel>Password</FormLabel>
+                   <Link to="/forgot-password" className='text-sm text-blue-500 hover:underline'>Forgot Password?</Link>
+                   </div>
                     <FormControl>
                       <Input type='password' placeholder='*******' {...field} />
                     </FormControl>
@@ -71,6 +75,9 @@ const SignIn = () => {
 
               </form>
             </Form>
+            <CardFooter className='mt-4 text-center text-sm text-muted-foreground'>
+              Don't have an account? <Link to="/sign-up" className='text-sm text-blue-500 hover:underline ml-0.5'>Sign Up</Link>
+              </CardFooter>
           </CardContent>
 
       </Card>
