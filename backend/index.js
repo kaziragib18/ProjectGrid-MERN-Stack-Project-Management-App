@@ -1,60 +1,70 @@
-import cors from 'cors';
-import express from 'express';
-import mongoose from 'mongoose';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
+import cors from "cors";
+import express from "express";
+import mongoose from "mongoose";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import routes from "./routes/index.js"; // Import routes
+// Load environment variables from .env file
 
 dotenv.config();
 
 const app = express();
 
 // Middleware setup
-app.use(cors({
-  origin: process.env.FRONTEND_URL , // Allow requests from the frontend URL
-  credentials: true,  // Allow credentials (cookies, authorization headers, etc.)
-  methods: ["GET", "POST", "DELETE", "PUT"],  // Allowed HTTP methods
-  allowedHeaders: ["Content-Type", "Authorization"]  // Allowed headers 
-}));  // Enable CORS for cross-origin requests
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // Allow requests from the frontend URL
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  })
+); // Enable CORS for cross-origin requests
 
-app.use(express.json());  // Parse JSON bodies
-app.use(morgan('dev'));  // Log HTTP requests
+app.use(express.json()); // Parse JSON bodies
+app.use(morgan("dev")); // Log HTTP requests
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB');
-}).catch(err => {
-  console.error('MongoDB connection error:', err);
-});
-// Environment variables  
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
 
+// Environment variables
 const PORT = process.env.PORT || 5000;
 
 // Basic route
-app.get('/', async (req, res) => {
+app.get("/", async (req, res) => {
   res.status(200).json({
-    message: 'Welcome to the ProjectGrid backend server!'
+    message: "Welcome to the ProjectGrid backend server!",
   });
 });
 
-// Error handling middleware 
+//http://localhost:5000/api-v1/auth/
+app.use("/api-v1", routes); // Use the imported routes
+
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
-    message: 'Something went wrong!',
-    error: err.message
+    message: "Something went wrong!",
+    error: err.message,
   });
 });
 
 app.use((req, res) => {
   res.status(404).json({
-    message: 'Not found'
+    message: "Not found",
   });
 });
 
-// Database connection  
+// Database connection
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
