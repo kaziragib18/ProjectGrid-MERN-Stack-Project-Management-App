@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Route } from '../../+types/root';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router';
 
 
 
@@ -13,8 +14,14 @@ export function meta({}: Route.MetaArgs) {
 
 const Homepage = () => {
   return (
-    <div>
-      <Button>Click Me</Button>
+    <div className='w-full h-screen flex items-center justify-center gap-4'>
+      <Link to="/sign-in">
+      <Button className='bg-blue-500 text-amber-50'>Login</Button>
+      </Link>
+
+      <Link to="/sign-up">
+      <Button variant="outline" className='bg-blue-500 text-amber-50'>Sign Up</Button>
+      </Link>
     </div>
   )
 }
