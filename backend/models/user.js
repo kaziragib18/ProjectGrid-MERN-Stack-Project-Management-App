@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: trim, // Automatically removes whitespace
+      trim: trim,
     },
     profilePicture: {
       type: String,
