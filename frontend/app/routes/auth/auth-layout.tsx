@@ -1,14 +1,20 @@
-import React from 'react'
-import { Outlet } from 'react-router';
+import { useAuth } from "@/provider/auth-context";
+import React from "react";
+import { Navigate, Outlet } from "react-router";
 
 const AuthLayout = () => {
-  return (
-    <div className='w-full h-screen flex items-center justify-center bg-gray-100'>
-      <Outlet />
-      {/* The Outlet component will render the child routes inside this layout */}  
-
-    </div>
-  )
-}
+  // This component is used to protect the routes that require authentication
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  // If the user is not authenticated, redirect them to the dashboard
+  if (!isAuthenticated) {
+    return <Navigate to="/dashboard" />;
+  }
+  // If the user is authenticated, render the Outlet to display the nested routes
+  // The Outlet component will render the child routes defined in the auth layout
+  return <Outlet />;
+};
 
 export default AuthLayout;

@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import ReactQueryProvider from "./provider/react-query-provider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,6 +24,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// This is the root layout component for the application
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -42,9 +44,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ReactQueryProvider>
+      <Outlet />
+    </ReactQueryProvider>
+  );
 }
 
+// This is the error boundary component for handling errors in the application
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
