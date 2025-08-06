@@ -17,7 +17,6 @@ app.use(
     origin: process.env.FRONTEND_URL, // Allow requests from the frontend URL
     methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   })
 ); // Enable CORS for cross-origin requests
 
@@ -50,20 +49,17 @@ app.use("/api-v1", routes); // Use the imported routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: "Something went wrong!",
-    error: err.message,
-  });
+  console.log(err.stack);
+  res.status(500).json({ message: "Internal server error" });
 });
 
+// Not found middleware
 app.use((req, res) => {
   res.status(404).json({
     message: "Not found",
   });
 });
 
-// Database connection
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

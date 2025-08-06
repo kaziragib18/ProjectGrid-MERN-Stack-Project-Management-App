@@ -1,8 +1,8 @@
 import { SignUpSchema } from "@/lib/schema";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -21,20 +21,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
-import { useSignUpMutation } from "@/hooks/use-auth.js";
+import { Link, useNavigate } from "react-router";
+import { useSignUpMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
-// Define the type for the form data using zod's infer utility
-// This will automatically infer the type from the SignInSchema
-// This ensures that the form data will match the schema defined in SignInSchema
-export type SignUpFormData = z.infer<typeof SignUpSchema>;
+export type SignupFormData = z.infer<typeof SignUpSchema>;
 
 const SignUp = () => {
-  // Initialize the form with react-hook-form using the SignInSchema for validation
-  // The form will have two fields: email and password
-  // The resolver will use zod to validate the form data against the schema
-  const form = useForm<SignUpFormData>({
+  const navigate = useNavigate();
+  const form = useForm<SignupFormData>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
       email: "",
@@ -44,18 +39,23 @@ const SignUp = () => {
     },
   });
 
-  // Create a mutation hook for signing up using the useSignUpMutation hook
   const { mutate, isPending } = useSignUpMutation();
 
-  // Handle form submission
-  const handleOnSubmit = (values: SignUpFormData) => {
+  const handleOnSubmit = (values: SignupFormData) => {
     mutate(values, {
       onSuccess: () => {
-        toast.success("Account created successfully! Please sign in.");
+        toast.success("Email Verification Required", {
+          description:
+            "Please check your email for a verification link. If you don't see it, please check your spam folder.",
+        });
+
+        form.reset();
+        navigate("/sign-in");
       },
       onError: (error: any) => {
-        const errorMessage = error?.response?.data?.message || "Sign up failed";
-        console.error("Sign up error:", error);
+        const errorMessage =
+          error.response?.data?.message || "An error occurred";
+        console.log(error);
         toast.error(errorMessage);
       },
     });
@@ -63,35 +63,21 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md p-6 bg-white shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
+      <Card className="max-w-md w-full shadow-xl">
+        <CardHeader className="text-center mb-5">
+          <CardTitle className="text-2xl font-bold">
             Create an account
           </CardTitle>
-          <CardDescription className="text-center text-sm text-muted-foreground">
-            Please enter your name, email, and password to create an account.
+          <CardDescription className="text-sm text-muted-foreground">
+            Create an account to continue
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleOnSubmit)}
-              className="space-y-5"
+              className="space-y-6"
             >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input type="text" placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="email"
@@ -109,15 +95,14 @@ const SignUp = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="password"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="*******" {...field} />
+                      <Input type="text" placeholder="John Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,12 +111,33 @@ const SignUp = () => {
 
               <FormField
                 control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="*******" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,12 +147,14 @@ const SignUp = () => {
               <Button
                 type="submit"
                 className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
+                disabled={isPending}
               >
-                {isPending ? "Signing Up..." : "Sign Up"}
+                {isPending ? "Signing up..." : "Sign up"}
               </Button>
             </form>
           </Form>
-          <CardFooter className="mt-4 text-center text-sm text-muted-foreground">
+
+          <CardFooter className="mt-4 flex justify-center text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               to="/sign-in"

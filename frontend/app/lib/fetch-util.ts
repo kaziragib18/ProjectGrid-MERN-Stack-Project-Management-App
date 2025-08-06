@@ -1,67 +1,56 @@
-import axios from 'axios';
+import axios from "axios";
 
-//This file is used to configure the axios instance for API requests.
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api-v1';
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api-v1";
 
-// Create an axios instance with the base URL and default headers
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Export the axios instance for use in other parts of the application
-api.interceptors.request.use(
-  (config) => {
-    // Add authorization token to headers if available
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token ?? ""}`; // Add token to Authorization header
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token ?? ""}`;
+  }
+  return config;
+});
+
+// Add a global handler for 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Dispatch a custom event to trigger logout in AuthProvider
+      window.dispatchEvent(new Event("force-logout"));
     }
-    return config;
-  });
+    return Promise.reject(error);
+  }
+);
 
-  api.interceptors.response.use(
-    (response) => response, 
-    (error) => {
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            window.dispatchEvent(new Event('unauthorized'));
-            break;
-          case 500:
-            console.error('Internal server error');
-            break;
-          case 404:
-            console.error('Resource not found');
-            break;
-          default:
-            console.error('An error occurred');
-        }
-      }
-      return Promise.reject(error);
-    }
-  );
+const postData = async <T>(url: string, data: unknown): Promise<T> => {
+  const response = await api.post(url, data);
 
-  const postData = async <T>(url: string, data: unknown): Promise<T> => {
-    const response = await api.post(url, data);
-    return response.data;
-  };
+  return response.data;
+};
 
-  const fetchData = async <T>(url: string): Promise<T> => {
-    const response = await api.get(url);
-    return response.data;
-  };
+const updateData = async <T>(url: string, data: unknown): Promise<T> => {
+  const response = await api.put(url, data);
 
-  const updateData = async <T>(url: string, data: unknown): Promise<T> => {
-    const response = await api.put(url, data);
-    return response.data;
-  };
+  return response.data;
+};
 
-  const deleteData = async <T>(url: string): Promise<T> => {
-    const response = await api.delete(url);
-    return response.data;
-  };
+const fetchData = async <T>(url: string): Promise<T> => {
+  const response = await api.get(url);
 
-  export { api, postData, fetchData, updateData, deleteData };
+  return response.data;
+};
+
+const deleteData = async <T>(url: string): Promise<T> => {
+  const response = await api.delete(url);
+
+  return response.data;
+};
+
+export { postData, fetchData, updateData, deleteData };

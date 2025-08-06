@@ -3,16 +3,17 @@ import React from "react";
 import { Navigate, Outlet } from "react-router";
 
 const AuthLayout = () => {
-  // This component is used to protect the routes that require authentication
   const { isAuthenticated, isLoading } = useAuth();
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  // If the user is authenticated, redirect them to the dashboard
+
   if (isAuthenticated) {
+    // If the user is authenticated, redirect them to the dashboard
     return <Navigate to="/dashboard" />;
   }
-  // If the user is authenticated, render the Outlet to display the nested routes
+  // If the user is not authenticated, render the Outlet to show the auth routes
   // The Outlet component will render the child routes defined in the auth layout
   return <Outlet />;
 };
