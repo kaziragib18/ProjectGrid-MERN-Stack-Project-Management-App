@@ -22,6 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
+import { useSignUpMutation } from "@/hooks/use-auth.js";
+import { toast } from "sonner";
 
 // Define the type for the form data using zod's infer utility
 // This will automatically infer the type from the SignInSchema
@@ -42,10 +44,21 @@ const SignUp = () => {
     },
   });
 
-  const handleOnSubmit = (data: SignUpFormData) => {
-    // Handle form submission
-    // You can send the data to your API or perform any other action
-    console.log("Form submitted:", data);
+  // Create a mutation hook for signing up using the useSignUpMutation hook
+  const { mutate, isPending } = useSignUpMutation();
+
+  // Handle form submission
+  const handleOnSubmit = (values: SignUpFormData) => {
+    mutate(values, {
+      onSuccess: () => {
+        toast.success("Account created successfully! Please sign in.");
+      },
+      onError: (error: any) => {
+        const errorMessage = error?.response?.data?.message || "Sign up failed";
+        console.error("Sign up error:", error);
+        toast.error(errorMessage);
+      },
+    });
   };
 
   return (
@@ -129,7 +142,7 @@ const SignUp = () => {
                 type="submit"
                 className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
               >
-                Sign Up
+                {isPending ? "Signing Up..." : "Sign Up"}
               </Button>
             </form>
           </Form>

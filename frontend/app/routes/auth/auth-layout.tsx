@@ -8,8 +8,8 @@ const AuthLayout = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  // If the user is not authenticated, redirect them to the dashboard
-  if (!isAuthenticated) {
+  // If the user is authenticated, redirect them to the dashboard
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" />;
   }
   // If the user is authenticated, render the Outlet to display the nested routes

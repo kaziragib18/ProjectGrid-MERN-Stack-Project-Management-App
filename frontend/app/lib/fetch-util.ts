@@ -1,9 +1,7 @@
 import axios from 'axios';
-import { error } from 'console';
-import { T } from 'node_modules/react-router/dist/development/index-react-server-client-KLg-U4nr.mjs';
 
-// This file is used to configure the axios instance for API requests.
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api-v1';
+//This file is used to configure the axios instance for API requests.
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api-v1';
 
 // Create an axios instance with the base URL and default headers
 const api = axios.create({
@@ -19,37 +17,50 @@ api.interceptors.request.use(
     // Add authorization token to headers if available
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`; // Add the token to the Authorization header
+      config.headers.Authorization = `Bearer ${token ?? ""}`; // Add token to Authorization header
     }
     return config;
   });
 
   api.interceptors.response.use(
-  (response) => response, (error) => {
-    // Handle errors globally
-    if (error.response && error.response.status === 401) {
-      window.dispatchEvent(new Event('unauthorized')); // Dispatch an event for unauthorized access
+    (response) => response, 
+    (error) => {
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            window.dispatchEvent(new Event('unauthorized'));
+            break;
+          case 500:
+            console.error('Internal server error');
+            break;
+          case 404:
+            console.error('Resource not found');
+            break;
+          default:
+            console.error('An error occurred');
+        }
+      }
+      return Promise.reject(error);
     }
-    return Promise.reject(error); // Reject the promise with the error
-  });
+  );
 
-  const postData = async <T>(path: string, data: unknown): Promise<T> => {
-    const response = await api.post(path, data);
+  const postData = async <T>(url: string, data: unknown): Promise<T> => {
+    const response = await api.post(url, data);
     return response.data;
   };
 
-  const fetchData = async <T>(path: string): Promise<T> => {
-    const response = await api.post(path);
+  const fetchData = async <T>(url: string): Promise<T> => {
+    const response = await api.get(url);
     return response.data;
   };
 
-  const updateData = async <T>(path: string, data: unknown): Promise<T> => {
-    const response = await api.put(path);
+  const updateData = async <T>(url: string, data: unknown): Promise<T> => {
+    const response = await api.put(url, data);
     return response.data;
   };
 
-  const deleteData = async <T>(path: string): Promise<T> => {
-    const response = await api.delete(path);
+  const deleteData = async <T>(url: string): Promise<T> => {
+    const response = await api.delete(url);
     return response.data;
   };
 

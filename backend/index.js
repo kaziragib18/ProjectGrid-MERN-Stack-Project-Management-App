@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import dotenv from "dotenv";
+
 import routes from "./routes/index.js"; // Import routes
 // Load environment variables from .env file
 
@@ -14,27 +15,25 @@ const app = express();
 app.use(
   cors({
     origin: process.env.FRONTEND_URL, // Allow requests from the frontend URL
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   })
 ); // Enable CORS for cross-origin requests
 
-app.use(express.json()); // Parse JSON bodies
 app.use(morgan("dev")); // Log HTTP requests
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB");
   })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
+
+app.use(express.json()); // Parse JSON bodies
 
 // Environment variables
 const PORT = process.env.PORT || 5000;

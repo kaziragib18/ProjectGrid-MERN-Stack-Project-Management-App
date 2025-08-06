@@ -14,22 +14,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined); // Creating the AuthContext with an initial value of undefined
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null); // State to hold the authenticated user
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // State to hold authentication status
-  const [isLoading, setIsLoading] = useState<boolean>(true); // State to indicate loading state
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // State to hold authentication status
+  const [isLoading, setIsLoading] = useState(false); // State to indicate if authentication is in progress
 
   // Function to log in the user
   const login = async (email: string, password: string) => {
     console.log(email, password); // Log the email and password for debugging purposes
-    setIsLoading(true); // Set loading state to true while logging in
   };
 
   // Function to log out the user
   const logout = async () => {
     // Implement logout logic here
+    console.log("logout");
     // For example, clear user state and update isAuthenticated state
   };
 
