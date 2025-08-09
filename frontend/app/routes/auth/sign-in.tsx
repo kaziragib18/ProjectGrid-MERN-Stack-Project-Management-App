@@ -22,16 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
+import { ArrowLeft } from "lucide-react";
 
-// Define the type for the form data using zod's infer utility
-// This will automatically infer the type from the SignInSchema
-// This ensures that the form data will match the schema defined in SignInSchema
+// Type inferred from schema
 type SignInFormData = z.infer<typeof SignInSchema>;
 
 const SignIn = () => {
-  // Initialize the form with react-hook-form using the SignInSchema for validation
-  // The form will have two fields: email and password
-  // The resolver will use zod to validate the form data against the schema
   const form = useForm<SignInFormData>({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
@@ -41,13 +37,20 @@ const SignIn = () => {
   });
 
   const handleOnSubmit = (data: SignInFormData) => {
-    // Handle form submission
-    // You can send the data to your API or perform any other action
     console.log("Form submitted:", data);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4 relative">
+      {/* Back to Home Icon Button */}
+      <Link
+        to="/"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 rounded-full border border-gray-300 hover:bg-gray-200 transition-colors"
+        aria-label="Back to Home"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-700" />
+      </Link>
+
       <Card className="w-full max-w-md p-6 bg-white shadow-xl">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold">
@@ -57,6 +60,7 @@ const SignIn = () => {
             Please enter your email and password to sign in.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <Form {...form}>
             <form
@@ -80,6 +84,7 @@ const SignIn = () => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
@@ -114,8 +119,9 @@ const SignIn = () => {
               </Button>
             </form>
           </Form>
+
           <CardFooter className="mt-4 flex justify-center text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               to="/sign-up"
               className="text-sm text-blue-500 hover:underline ml-0.5"

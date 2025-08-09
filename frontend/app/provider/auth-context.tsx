@@ -40,6 +40,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Optional Improvement (Prevent UI Crash: to avoid runtime crashes in production, return a fallback instead of throwing an error):
+// This custom hook allows components to access the authentication context easily
+//will use this if there is an error on frontend
+
+// export const useAuth = () => {
+//   const context = useContext(AuthContext);
+//   if (!context) {
+//     console.warn("useAuth was used outside AuthProvider");
+//     return {
+//       user: null,
+//       isAuthenticated: false,
+//       isLoading: false,
+//       login: async () => {},
+//       logout: async () => {},
+//     };
+//   }
+//   return context;
+// };
+
 // This custom hook allows components to access the authentication context easily
 export const useAuth = () => {
   const context = useContext(AuthContext);

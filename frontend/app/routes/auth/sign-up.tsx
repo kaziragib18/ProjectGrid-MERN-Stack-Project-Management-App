@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
 import { useSignUpMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react"; // Icon import
 
 export type SignupFormData = z.infer<typeof SignUpSchema>;
 
@@ -62,7 +63,17 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
+    <div className="min-h-screen relative flex flex-col items-center justify-center bg-muted/40 p-4">
+      {/* Back icon button in top-left corner */}
+      <Link
+        to="/"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 rounded-full border border-gray-300 hover:bg-gray-200 transition-colors"
+        aria-label="Back to Home"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-700" />
+      </Link>
+
+      {/* Signup Card */}
       <Card className="max-w-md w-full shadow-xl">
         <CardHeader className="text-center mb-5">
           <CardTitle className="text-2xl font-bold">
@@ -95,6 +106,7 @@ const SignUp = () => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="name"
@@ -126,6 +138,7 @@ const SignUp = () => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -146,7 +159,7 @@ const SignUp = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
+                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200 cursor-pointer"
                 disabled={isPending}
               >
                 {isPending ? "Signing up..." : "Sign up"}
@@ -158,7 +171,7 @@ const SignUp = () => {
             Already have an account?{" "}
             <Link
               to="/sign-in"
-              className="text-sm text-blue-500 hover:underline ml-0.5"
+              className="text-sm text-blue-500 hover:underline ml-1"
             >
               Sign In
             </Link>
