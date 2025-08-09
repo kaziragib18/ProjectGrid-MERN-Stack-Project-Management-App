@@ -1,19 +1,12 @@
-// src/components/Features.tsx
 import React, { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import {
-  Briefcase,
-  CheckCircle,
-  Users,
-  BarChart,
-  Mail,
-} from 'lucide-react';
+import { Briefcase, CheckCircle, Users, BarChart, Mail } from 'lucide-react';
 
 interface Feature {
   title: string;
   description: string;
   icon: React.ReactNode;
-  bgColor: string;
+  accent: string; // color name for glow
 }
 
 const featuresData: Feature[] = [
@@ -21,52 +14,50 @@ const featuresData: Feature[] = [
     title: "Interactive Dashboard",
     description:
       "Get a bird’s-eye view of all your projects. Monitor progress, deadlines, and team activity in one clean, unified interface.",
-    icon: <Briefcase size={28} className="mr-3 text-blue-600" />,
-    bgColor: "bg-blue-50",
+    icon: <Briefcase size={28} className="mr-3 text-blue-400" />,
+    accent: "blue",
   },
   {
     title: "Data Analytics",
     description:
       "Gain actionable insights from charts, timelines, and reports. Optimize workflows and make informed decisions with real data.",
-    icon: <BarChart size={28} className="mr-3 text-purple-600" />,
-    bgColor: "bg-purple-50",
+    icon: <BarChart size={28} className="mr-3 text-purple-400" />,
+    accent: "purple",
   },
   {
     title: "Task Management",
     description:
       "Create, assign, prioritize, and track tasks easily. Automate repetitive tasks and keep everyone on the same page.",
-    icon: <CheckCircle size={28} className="mr-3 text-green-600" />,
-    bgColor: "bg-green-50",
+    icon: <CheckCircle size={28} className="mr-3 text-green-400" />,
+    accent: "green",
   },
   {
     title: "Secure Authentication",
     description:
       "Built-in authentication with robust security: password hashing, login throttling, and optional 2FA support.",
-    icon: <Users size={28} className="mr-3 text-yellow-600" />,
-    bgColor: "bg-yellow-50",
+    icon: <Users size={28} className="mr-3 text-yellow-400" />,
+    accent: "yellow",
   },
   {
     title: "2FA (Two-Factor Auth)",
     description:
       "Add an extra layer of security with time-based OTPs or email-based verification codes for all user logins.",
-    icon: <CheckCircle size={28} className="mr-3 text-red-600" />,
-    bgColor: "bg-red-50",
+    icon: <CheckCircle size={28} className="mr-3 text-red-400" />,
+    accent: "red",
   },
   {
     title: "Email Verification",
     description:
       "Ensure user authenticity with built-in email verification flows for new registrations, password resets, and sensitive actions.",
-    icon: <Mail size={28} className="mr-3 text-indigo-600" />,
-    bgColor: "bg-indigo-50",
+    icon: <Mail size={28} className="mr-3 text-indigo-400" />,
+    accent: "indigo",
   },
 ];
 
 const Features: FC = () => {
-  // State to track which cards are visible (for animation)
   const [visibleCards, setVisibleCards] = useState<boolean[]>([]);
 
   useEffect(() => {
-    // Animate cards one by one with slight delay
     featuresData.forEach((_, i) => {
       setTimeout(() => {
         setVisibleCards((prev) => {
@@ -79,33 +70,26 @@ const Features: FC = () => {
   }, []);
 
   return (
-    <section className="py-20 px-6 bg-white">
-      <div className="max-w-6xl mx-auto text-center">
+    <section className="py-20 px-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="max-w-6xl mx-auto text-center text-white">
         <h2 className="text-3xl font-bold mb-12">
           Powerful Features to Elevate Your Workflow
         </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 text-left">
-          {featuresData.map(({ title, description, icon, bgColor }, idx) => (
+          {featuresData.map(({ title, description, icon, accent }, idx) => (
             <div
               key={title}
-              className={`${bgColor} p-6 rounded-lg shadow-lg transform transition-all duration-500 ease-out
-                ${
-                  visibleCards[idx]
-                    ? "opacity-100 scale-100"
-                    : "opacity-0 scale-90"
-                }
-                hover:scale-105 hover:shadow-2xl cursor-pointer
-              `}
+              className={`feature-card ${accent} ${visibleCards[idx] ? "visible" : ""}`}
             >
-              <div className="flex items-center mb-4">
+              <div className="shimmer"></div>
+              <div className="flex items-center mb-4 relative z-10">
                 {icon}
                 <h3 className="text-xl font-semibold">{title}</h3>
               </div>
-              <p className="text-gray-700">{description}</p>
+              <p className="text-gray-200 relative z-10">{description}</p>
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );
