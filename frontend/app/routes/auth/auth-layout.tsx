@@ -1,3 +1,4 @@
+import ThreeBallLoader from "@/components/ui/customLoader";
 import { useAuth } from "@/provider/auth-context";
 import React from "react";
 import { Navigate, Outlet } from "react-router";
@@ -6,7 +7,9 @@ const AuthLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>
+      <ThreeBallLoader />
+    </div>;
   }
 
   if (isAuthenticated) {

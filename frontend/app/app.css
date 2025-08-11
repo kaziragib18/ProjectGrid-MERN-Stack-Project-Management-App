@@ -310,3 +310,57 @@ ANIMATIONS
   transform: translateX(100%);
 }
 
+
+/* custom loader *//* === Three Ball Loader Styles === */
+
+.three-ball-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.three-ball-loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  animation: spin 1.5s linear infinite;
+}
+
+.ball {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: #4a90e2;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ball1 {
+  transform: translate(-50%, -50%) rotate(0deg) translateX(30px);
+}
+.ball2 {
+  transform: translate(-50%, -50%) rotate(120deg) translateX(30px);
+}
+.ball3 {
+  transform: translate(-50%, -50%) rotate(240deg) translateX(30px);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-text {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  color: #555;
+}
