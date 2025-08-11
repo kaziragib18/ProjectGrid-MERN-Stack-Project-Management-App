@@ -1,9 +1,9 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import Verification from "../models/verification.js";
 import { sendEmail } from "../libs/send-email.js";
 import aj from "../libs/arcjet.js";
+import Verification from "../models/verification.js";
+import jwt from "jsonwebtoken";
 
 const registerUser = async (req, res) => {
   try {
@@ -241,4 +241,148 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, verifyEmail };
+// Function to handle password reset request
+// This function will generate a reset token and send it to the user's email
+// The user can then use this token to reset their password
+
+const resetPasswordRequest = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found"
+      });
+    }
+    if (!user.isEmailVerified) {
+      return res.status(400).json({
+        message: "Email is not verified. Please verify your email before resetting the password."
+      });
+    }
+    const existingVerification = await Verification.findOne({
+      userId: user._id,
+    });
+   
+    // This prevents multiple reset requests from being sent to the user's email
+    if (existingVerification && existingVerification.expiresAt > new Date()) {
+      return res.status(400).json({
+        message: "A password reset request is already in progress. Please check your email for the reset link."
+      });
+    }
+    // If an existing verification document is found and it has expired, delete it
+    // This ensures that expired verification documents do not clutter the database
+    if( existingVerification && existingVerification.expiresAt < new Date()) {
+      await Verification.findByIdAndDelete(existingVerification._id);
+      console.log("Deleted expired verification document");
+    }
+    // Generate a reset token for the password reset request
+    // This token will be used to verify the user's identity when they attempt to reset their password
+    const resetPasswordToken = jwt.sign(
+      { userId: user._id, purpose: "password-reset" },
+      process.env.JWT_SECRET,
+      { expiresIn: "10m" }
+    );
+    // Create a new verification document for the password reset request
+    // store the reset token and its expiration time
+    await Verification.create({
+      userId: user._id,
+      token: resetPasswordToken,
+      expiresAt: new Date(Date.now() + 600000), // Set expiration time for the token (10 minutes)
+    });
+
+    // Constructing the reset link using the reset token
+    // This link will be sent to the user's email and will allow them to reset their password
+    const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
+    // Send the reset link to the user's email
+    const emailBody = `<p>Click the link below to reset your password:</p>
+    <a href="${resetPasswordLink}">Reset Password</a>`;
+    const emailSubject = "Password Reset Request for ProjectGrid";
+    const isEmailSent = await sendEmail(email, emailSubject, emailBody);
+    if (!isEmailSent) {
+      return res.status(500).json({
+        message: "Failed to send password reset email",
+      });
+    }
+    res.status(200).json({
+      message: "A password reset link has been sent to your email address. Please check your email to reset your password.",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}
+
+// Function to verify the reset token and reset the user's password
+// This function will be called when the user clicks the reset link in their email
+// It will verify the token and update the user's password if the token is valid
+
+const verifyAndResetPassword = async (req, res) => {
+  try {
+    const { token, newPassword, confirmPassword } = req.body;
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (!payload) {
+      return res.status(401).json({
+        message: "Unauthorized request",
+      });
+    }
+    const { userId, purpose } = payload;
+    if (purpose !== "password-reset") {
+      return res.status(401).json({
+        message: "Invalid token purpose",
+      });
+    }
+    const verification = await Verification.findOne({
+      userId,
+      token, 
+    });
+    if (!verification) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+    const isTokenExpired = verification.expiresAt < new Date();
+    if (isTokenExpired) {
+      return res.status(401).json({
+        message: "Verification token has expired",
+      });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+    // Check if the new password and confirm password match
+    // If they do not match, return an error response
+    // This ensures that the user has to enter the same password twice for confirmation
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        message: "New password and confirm password do not match",
+      });
+    }
+    const salt = await bcrypt.genSalt(10); // Generate a salt for hashing
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+    // Update the user's password with the new hashed password
+    user.password = hashPassword;
+    await user.save(); // Save the updated user document
+
+    // Delete the verification document after successful password reset
+    await Verification.findByIdAndDelete(verification._id);
+
+    return res.status(200).json({
+      message: "Password reset successfully",
+      user: { name: user.name, email: user.email }, // Return the user data (excluding password)
+    });
+    
+  }catch (error) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  } 
+}
+
+export { loginUser, registerUser, verifyEmail, resetPasswordRequest, verifyAndResetPassword };

@@ -8,12 +8,13 @@ export const useSignUpMutation = () => {
     mutationFn: (data: SignupFormData) => postData("/auth/register", data),
     onSuccess: () => {
       // toast.success("Account created successfully! Please sign in.");
-      console
+      console;
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Something went wrong!";
-      toast.error(errorMessage);
-    }
+      const errorMessage =
+        error?.response?.data?.message || "Something went wrong!";
+      // toast.error(errorMessage);
+    },
   });
 };
 
@@ -28,17 +29,19 @@ export const useVerifyEmailMutation = () => {
       toast.success("Email verified successfully! You can now sign in.");
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Verification failed!";
-      toast.error(errorMessage);
-    }
+      const errorMessage =
+        error?.response?.data?.message || "Verification failed!";
+      // toast.error(errorMessage);
+    },
   });
-}
+};
 
- export const useLoginMutation = () => {
+export const useLoginMutation = () => {
   return useMutation({
     // This mutation function sends a POST request to the login endpoint with email and password
     // It returns a promise that resolves to the response data
-    mutationFn: (data: { email: string; password: string }) => postData("/auth/login", data),
+    mutationFn: (data: { email: string; password: string }) =>
+      postData("/auth/login", data),
     onSuccess: (data) => {
       // toast.success("Login successful!");
       console.log("Login successful", data);
@@ -47,6 +50,39 @@ export const useVerifyEmailMutation = () => {
       const errorMessage = error?.response?.data?.message || "Login failed!";
       // toast.error(errorMessage);
       console.error("Login error:", errorMessage);
-    }
+    },
+  });
+};
+
+export const useForgotPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data: { email: string }) =>
+      postData("/auth/reset-password-request", data),
+    onSuccess: () => {
+      toast.success("Password reset link sent to your email.");
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message || "Failed to send password reset link!";
+      // toast.error(errorMessage);
+    },
+  });
+};
+
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data: {
+      token: string;
+      newPassword: string;
+      confirmPassword: string;
+    }) => postData("/auth/reset-password", data),
+    onSuccess: () => {
+      toast.success("Password reset successfull!");
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message || "Failed to send password reset link!";
+      // toast.error(errorMessage);
+    },
   });
 };
