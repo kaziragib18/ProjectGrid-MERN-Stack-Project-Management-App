@@ -1,69 +1,109 @@
-import type { User } from "@/types"; // Importing User type from types module
-import React, { createContext, useState, useContext } from "react";
+import type { User } from "@/types";
+import { createContext, useContext, useEffect, useState } from "react";
+import { queryClient } from "./react-query-provider";
+import { useLocation, useNavigate } from "react-router";
+import { publicRoutes } from "@/lib";
 
-// This context will be used to provide user authentication state throughout the application
+// This file provides the authentication context for the application
+// It manages user authentication state, login, and logout functionality
+// The context is used to provide authentication data and methods to components throughout the app
 interface AuthContextType {
-  // The user object representing the authenticated user
   user: User | null;
-  isAuthenticated: boolean; // Boolean indicating if the user is authenticated
-  isLoading: boolean; // Boolean indicating if the authentication state is being loaded
-
-  login: (email: string, password: string) => Promise<void>; // Function to log in the user
-  logout: () => Promise<void>; // Function to log out the user
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (data: any) => Promise<void>;
+  logout: () => Promise<void>;
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined); // Creating the AuthContext with an initial value of undefined
+// Create a context for authentication state
+// This context will provide user information and authentication methods to the components
+// that need access to the authentication state
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null); // State to hold the authenticated user
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // State to hold authentication status
-  const [isLoading, setIsLoading] = useState(false); // State to indicate if authentication is in progress
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Function to log in the user
-  const login = async (email: string, password: string) => {
-    console.log(email, password); // Log the email and password for debugging purposes
+  // Use the useLocation hook to get the current path
+  // and determine if the current route is a public route
+  // This helps in redirecting users to the sign-in page if they are not authenticated
+  const navigate = useNavigate();
+  const currentPath = useLocation().pathname;
+  const isPublicRoute = publicRoutes.includes(currentPath);
+
+  // check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      setIsLoading(true);
+      try {
+        const storedUser = localStorage.getItem("user");
+
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          if (!isPublicRoute) {
+            navigate("/sign-in");
+          }
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Listen for a custom event to handle logout
+  // This allows the application to respond to logout events triggered from anywhere in the app
+  // For example, if a user is forced to log out due to a session expiration or security reason
+  useEffect(() => {
+    const handleLogout = () => {
+      logout();
+      navigate("/sign-in");
+    };
+    window.addEventListener("force-logout", handleLogout);
+    return () => window.removeEventListener("force-logout", handleLogout);
+  }, []);
+
+  const login = async (data: any) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    setUser(data.user);
+    setIsAuthenticated(true);
   };
 
-  // Function to log out the user
   const logout = async () => {
-    // Implement logout logic here
-    console.log("logout");
-    // For example, clear user state and update isAuthenticated state
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    setUser(null);
+    setIsAuthenticated(false);
+
+    queryClient.clear();
   };
 
-  return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated, isLoading, login, logout }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const values = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+  };
+
+  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };
 
-// Optional Improvement (Prevent UI Crash: to avoid runtime crashes in production, return a fallback instead of throwing an error):
-// This custom hook allows components to access the authentication context easily
-//will use this if there is an error on frontend
-
-// export const useAuth = () => {
-//   const context = useContext(AuthContext);
-//   if (!context) {
-//     console.warn("useAuth was used outside AuthProvider");
-//     return {
-//       user: null,
-//       isAuthenticated: false,
-//       isLoading: false,
-//       login: async () => {},
-//       logout: async () => {},
-//     };
-//   }
-//   return context;
-// };
-
-// This custom hook allows components to access the authentication context easily
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context; // Return the authentication context
+  return context;
 };

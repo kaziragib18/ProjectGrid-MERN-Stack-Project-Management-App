@@ -8,7 +8,6 @@ const Navbar: FC = () => {
       <Link to="/" className="text-2xl font-bold text-zinc-100">
         ProjectGrid
       </Link>
-
       <nav className="space-x-4 flex items-center">
         <Link to="/sign-in">
           <Button className="text-zinc-100 border border-zinc-300/30 rounded-md px-4 py-2 hover:bg-zinc-700 transition-colors duration-200 cursor-pointer">

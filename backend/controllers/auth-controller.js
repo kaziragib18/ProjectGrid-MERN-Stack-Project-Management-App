@@ -35,7 +35,7 @@ const registerUser = async (req, res) => {
       email,
       password: hashPassword, // Save the hashed password
       name,
-      isEmailVerified: false, // Make sure your User schema supports this field
+      isEmailVerified: false, // Making sure your User schema supports this field
     });
 
     // Create a verification token for the email verification
@@ -43,7 +43,7 @@ const registerUser = async (req, res) => {
       {
         userId: newUser._id,
         email: newUser.email,
-        purpose: "email-Verification",
+        purpose: "email-verification",
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
@@ -56,7 +56,7 @@ const registerUser = async (req, res) => {
     });
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    // Here you would typically send the verification email to the user
+    //send the verification email to the user
     const emailBody = `<p>Click the link below to verify your email address:</p>
     <a href="${verificationLink}">Verify Email</a>`;
     const emailSubject = "Email Verification for ProjectGrid";
@@ -84,24 +84,95 @@ const registerUser = async (req, res) => {
   }
 };
 
+
 const loginUser = async (req, res) => {
   try {
-    // Extract user credentials from the request body
     const { email, password } = req.body;
+    //
+    const user = await User.findOne({ email }).select("+password"); // Include password in the query to compare it with the user model as it is set to select: false
 
-    // Here you would typically verify the user's credentials against the database
-    // For demonstration purposes, we'll just return a success message
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    if (!user.isEmailVerified) {
+      const existingVerification = await Verification.findOne({
+        userId: user._id,
+      });
+
+      if (existingVerification && existingVerification.expiresAt > new Date()) {
+        return res.status(400).json({
+          message:
+            "Please verify your email before logging in. A verification email has already been sent to your email address.",
+        });
+      } else {
+        await Verification.findByIdAndDelete(existingVerification._id);
+
+        const verificationToken = jwt.sign(
+          { userId: user._id, purpose: "email-verification" },
+          process.env.JWT_SECRET,
+          { expiresIn: "1h" }
+        );
+
+        await Verification.create({
+          userId: user._id,
+          token: verificationToken,
+          expiresAt: new Date(Date.now() + 3600000), // Set expiration time for the token (1 hour)
+        });
+
+        // Send verification email
+        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
+        const emailSubject = "Verify your email";
+
+        const isEmailSent = await sendEmail(email, emailSubject, emailBody);
+
+        if (!isEmailSent) {
+          return res.status(500).json({
+            message: "Failed to send verification email",
+          });
+        }
+
+        res.status(201).json({
+          message:
+            "Verification email sent to your email. Please check and verify your account.",
+        });
+      }
+    }
+    // Check if the password is valid
+    // If the password is valid, generate a JWT token for the user
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+    // Generate JWT token for the user
+    // The token will be used for authentication in subsequent requests
+    const token = jwt.sign(
+      { userId: user._id, purpose: "login" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    // Update the last login time
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Return the token and user data (excluding password) in the response
+    // This is important to avoid sending sensitive information like password in the response
+    const userData = user.toObject();
+    delete userData.password;
+
     res.status(200).json({
-      message: "User logged in successfully",
-      user: { email }, // Return the user data (excluding password)
+      message: "Login successful",
+      token,
+      user: userData,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error logging in user",
-      error: error.message,
-    });
+    console.log(error);
+
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 const verifyEmail = async (req, res) => {
   try {
@@ -120,7 +191,7 @@ const verifyEmail = async (req, res) => {
     }
 
     const { userId, purpose } = decoded;
-    if (purpose !== "email-Verification") {
+    if (purpose !== "email-verification") {
       return res.status(401).json({ message: "Invalid token purpose" });
     }
 

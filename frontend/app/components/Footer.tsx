@@ -75,6 +75,7 @@ const Footer: FC = () => {
                 label: "Github",
                 icon: <Github size={24} />,
               },
+              
               {
                 href: "https://www.linkedin.com/in/kazi-md-ragib-580a5219b/",
                 label: "LinkedIn",

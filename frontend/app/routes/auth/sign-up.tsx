@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
 import { useSignUpMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react"; // Icon import
+import { ArrowLeft, Loader2 } from "lucide-react"; // Icon import
 
 export type SignupFormData = z.infer<typeof SignUpSchema>;
 
@@ -157,12 +157,11 @@ const SignUp = () => {
                 )}
               />
 
-              <Button
+            <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200 cursor-pointer"
-                disabled={isPending}
-              >
-                {isPending ? "Signing up..." : "Sign up"}
+                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200" disabled={isPending}
+              >{isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+        
               </Button>
             </form>
           </Form>

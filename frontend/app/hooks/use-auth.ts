@@ -17,9 +17,12 @@ export const useSignUpMutation = () => {
   });
 };
 
-
+// This hook is used to verify the user's email address
+// It sends a request to the backend with the verification token
+// and updates the UI based on the success or failure of the verification
 export const useVerifyEmailMutation = () => {
   return useMutation({
+    //
     mutationFn: (token: string) => postData("/auth/verify-email", { token }),
     onSuccess: () => {
       toast.success("Email verified successfully! You can now sign in.");
@@ -30,3 +33,20 @@ export const useVerifyEmailMutation = () => {
     }
   });
 }
+
+ export const useLoginMutation = () => {
+  return useMutation({
+    // This mutation function sends a POST request to the login endpoint with email and password
+    // It returns a promise that resolves to the response data
+    mutationFn: (data: { email: string; password: string }) => postData("/auth/login", data),
+    onSuccess: (data) => {
+      // toast.success("Login successful!");
+      console.log("Login successful", data);
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || "Login failed!";
+      // toast.error(errorMessage);
+      console.error("Login error:", errorMessage);
+    }
+  });
+};

@@ -9,6 +9,8 @@ const api = axios.create({
   },
 });
 
+// Add a request interceptor to include the token in the Authorization header
+// This will automatically attach the token to every request made using this axios instance
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,7 +19,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Add a global handler for 401 errors
+// Add a response interceptor to handle 401 Unauthorized errors
+// If a 401 error occurs, it will dispatch a custom event to trigger logout in the AuthProvider
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -29,6 +32,9 @@ api.interceptors.response.use(
   }
 );
 
+// Utility functions for making API requests
+// These functions can be used to perform CRUD operations on the API
+// They return a promise that resolves to the response data
 const postData = async <T>(url: string, data: unknown): Promise<T> => {
   const response = await api.post(url, data);
 

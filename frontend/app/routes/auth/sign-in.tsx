@@ -21,13 +21,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft, Loader, Loader2 } from "lucide-react";
+import { useLoginMutation } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { useAuth } from "@/provider/auth-context";
 
 // Type inferred from schema
 type SignInFormData = z.infer<typeof SignInSchema>;
 
 const SignIn = () => {
+  const navigate = useNavigate(); // Using useNavigate hook to programmatically navigate
+  const {login} = useAuth(); // Accessing the login function from AuthContext
+
+  // Initialize the form with the SignInSchema
+  // This schema defines the structure and validation rules for the sign-in form
   const form = useForm<SignInFormData>({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
@@ -35,9 +43,23 @@ const SignIn = () => {
       password: "",
     },
   });
+  // This function handles the form submission
+  // It uses the useLoginMutation hook to perform the login operation
+const {mutate, isPending} = useLoginMutation();
 
-  const handleOnSubmit = (data: SignInFormData) => {
-    console.log("Form submitted:", data);
+  const handleOnSubmit = (values: SignInFormData) => {
+    mutate(values, {
+      onSuccess: (data) => {
+        login(data);
+        // Handle successful login, e.g., redirect to dashboard or show success message
+        console.log("Login successful", data);
+      },
+      onError: (error) => {
+      const errorMessage = error?.response?.data?.message || "An error occurred during login";
+      toast.error(errorMessage);
+      console.error("Login error:", errorMessage);
+      },
+    });
   };
 
   return (
@@ -113,9 +135,9 @@ const SignIn = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
-              >
-                Sign In
+                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200" disabled={isPending}
+              >{isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+        
               </Button>
             </form>
           </Form>
