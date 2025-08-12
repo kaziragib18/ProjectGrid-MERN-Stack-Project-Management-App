@@ -28,13 +28,13 @@ export const Header = ({
 }: HeaderProps) => {
   const { user, logout } = useAuth();
 
-const workspaces: Workspace[] = []; // This should be replaced with actual workspace data from context or props
+  const workspaces: Workspace[] = []; // This should be replaced with actual workspace data from context or props
 
   return (
     <div className="bg-background sticky top-0 z-40 border-b">
       <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         <DropdownMenu>
-           <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button variant={"outline"}>
               {selectedWorkspace ? (
                 <>
@@ -51,7 +51,7 @@ const workspaces: Workspace[] = []; // This should be replaced with actual works
               )}
             </Button>
           </DropdownMenuTrigger>
-           <DropdownMenuContent>
+          <DropdownMenuContent>
             <DropdownMenuLabel>Workspace</DropdownMenuLabel>
             <DropdownMenuSeparator />
 
@@ -76,8 +76,6 @@ const workspaces: Workspace[] = []; // This should be replaced with actual works
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
-
-
         </DropdownMenu>
 
         <div className="flex items-center gap-2">
