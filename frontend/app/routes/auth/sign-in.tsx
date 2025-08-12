@@ -136,7 +136,11 @@ const {mutate, isPending} = useLoginMutation();
               <Button
                 type="submit"
                 className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200" disabled={isPending}
-              >{isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+              >{isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in
+                </>
+              ) : "Sign In"}
         
               </Button>
             </form>

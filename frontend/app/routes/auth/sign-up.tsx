@@ -157,11 +157,18 @@ const SignUp = () => {
                 )}
               />
 
-            <Button
+              <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200" disabled={isPending}
-              >{isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
-        
+                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Creating Account
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
             </form>
           </Form>

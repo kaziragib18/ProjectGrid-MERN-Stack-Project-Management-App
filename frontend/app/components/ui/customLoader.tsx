@@ -2,7 +2,7 @@
 import React from "react";
 import "@/app.css"; // or the correct path to your global CSS file
 
-const ThreeBallLoader: React.FC = () => {
+const CustomLoader: React.FC = () => {
   return (
     <div className="three-ball-loader-container">
       <div className="three-ball-loader">
@@ -10,9 +10,9 @@ const ThreeBallLoader: React.FC = () => {
         <span className="ball ball2"></span>
         <span className="ball ball3"></span>
       </div>
-      <p className="loader-text">Checking authentication...</p>
+      <p className="loader-text">Loading...</p>
     </div>
   );
 };
 
-export default ThreeBallLoader;
+export default CustomLoader;
