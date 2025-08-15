@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 // Schema for validating user registration, login, and email verification
 // Using Zod for schema validation
@@ -34,13 +34,30 @@ const resetPasswordRequestSchema = z.object({
 // It is used when a user resets their password after receiving a reset link
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token is required"),
-  newPassword: z.string().min(8, "New password must be at least 8 characters long"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters long"),
+  newPassword: z
+    .string()
+    .min(8, "New password must be at least 8 characters long"),
+  confirmPassword: z
+    .string()
+    .min(8, "Confirm password must be at least 8 characters long"),
 });
 
 const emailSchema = z.object({
   email: z.string().email("Invalid email format"),
 });
 
+// Schema for validating workspace creation
+const workspaceSchema = z.object({
+  name: z.string().min(3, "Workspace name is required"),
+  color: z.string().min(3, "Color is required"),
+  description: z.string().optional(),
+});
 
-export { loginSchema, registerSchema, verifyEmailSchema, resetPasswordSchema, emailSchema };
+export {
+  loginSchema,
+  registerSchema,
+  verifyEmailSchema,
+  resetPasswordSchema,
+  emailSchema,
+  workspaceSchema,
+};
