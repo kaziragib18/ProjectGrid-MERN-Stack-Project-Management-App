@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { de } from "zod/v4/locales";
 
 // The SignInSchema is used to validate the sign-in form data.
 export const SignInSchema = z.object({
@@ -30,4 +31,10 @@ export const resetPasswordSchema = z
   
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
+});
+
+export const workspaceSchema = z.object({
+  name: z.string().min(3, "Workspace name is required"),
+  color: z.string().min(3, "Color is required"),
+  description: z.string().optional(),
 });
