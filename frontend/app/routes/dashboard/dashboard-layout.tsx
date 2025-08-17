@@ -3,17 +3,25 @@ import { SidebarComponent } from "@/components/layout/sidebar-component";
 import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
 import { CreateWorkspace } from "@/components/workspace/create-workspace";
+import { fetchData } from "@/lib/fetch-util";
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import React, { useState } from "react";
 import { Navigate, Outlet } from "react-router";
 
+export const clientLoader = async () => {
+  try {
+    const [workspaces] = await Promise.all([fetchData("/workspaces")]);
+    return { workspaces };
+  } catch (error) {
+    console.error("Error in clientLoader:", error);
+    throw error;
+  }
+};
+
 const DashboardLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-
-  // This state can be used to manage the current workspace selection
-  // For now, it's initialized to null, but you can set it based on user selection
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
     null
   );
@@ -45,6 +53,7 @@ const DashboardLayout = () => {
           </div>
         </main>
       </div>
+
       <CreateWorkspace
         isCreatingWorkspace={isCreatingWorkspace}
         setIsCreatingWorkspace={setIsCreatingWorkspace}

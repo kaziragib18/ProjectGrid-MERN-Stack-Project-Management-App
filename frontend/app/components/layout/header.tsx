@@ -12,7 +12,7 @@ import {
   DropdownMenuGroup,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Link } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { WorkspaceAvatar } from "../workspace/workspace-avatar";
 
 interface HeaderProps {
@@ -28,14 +28,18 @@ export const Header = ({
 }: HeaderProps) => {
   const { user, logout } = useAuth();
 
-  const workspaces: Workspace[] = []; // This should be replaced with actual workspace data from context or props
+  // Workspaces from route loader
+  const data = useLoaderData() as { workspaces?: Workspace[] };
+  const workspaces = data?.workspaces ?? [];
+
+  // console.log(workspaces);
 
   return (
     <div className="bg-background sticky top-0 z-40 border-b">
       <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant={"outline"}>
+            <Button variant="outline">
               {selectedWorkspace ? (
                 <>
                   {selectedWorkspace.color && (
@@ -44,13 +48,16 @@ export const Header = ({
                       name={selectedWorkspace.name}
                     />
                   )}
-                  <span className="font-medium">{selectedWorkspace?.name}</span>
+                  <span className="ml-2 font-medium">
+                    {selectedWorkspace.name}
+                  </span>
                 </>
               ) : (
                 <span className="font-medium">Select Workspace</span>
               )}
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent>
             <DropdownMenuLabel>Workspace</DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -69,6 +76,7 @@ export const Header = ({
               ))}
             </DropdownMenuGroup>
 
+            <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={onCreateWorkspace}>
                 <PlusCircle className="w-4 h-4 mr-2" />

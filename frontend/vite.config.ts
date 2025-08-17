@@ -5,4 +5,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  server: {
+    proxy: {
+      '/.well-known/appspecific/com.chrome.devtools.json': {
+        bypass: () => {
+          return '{"status": "ok"}'; // respond with dummy JSON
+        }
+      }
+    }
+  }
 });
