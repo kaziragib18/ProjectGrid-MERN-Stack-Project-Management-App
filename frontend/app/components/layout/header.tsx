@@ -29,8 +29,7 @@ export const Header = ({
   const { user, logout } = useAuth();
 
   // Workspaces from route loader
-  const data = useLoaderData() as { workspaces?: Workspace[] };
-  const workspaces = data?.workspaces ?? [];
+  const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
 
   // console.log(workspaces);
 
