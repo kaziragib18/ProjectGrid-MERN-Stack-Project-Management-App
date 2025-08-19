@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
-import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"; // 👈 added Eye & EyeOff icons
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useLoginMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useAuth } from "@/provider/auth-context";
@@ -48,7 +48,7 @@ const SignIn = () => {
   // It uses the useLoginMutation hook to perform the login operation
   const { mutate, isPending } = useLoginMutation();
 
-  // 👇 state for password visibility toggle
+  // state for password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
 
   const handleOnSubmit = (values: SignInFormData) => {

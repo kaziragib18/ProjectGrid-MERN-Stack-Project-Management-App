@@ -18,3 +18,12 @@ export const useGetWorkspacesQuery =()=>{
     queryFn:async() => fetchData("/workspaces"),
   });
 };
+
+// Hook to get a single workspace
+// to fetch a single workspace
+export const useGetWorkspaceQuery = (workspaceId: string) => {
+  return useQuery({
+    queryKey: ["workspace", workspaceId],
+    queryFn: async () => fetchData(`/workspaces/${workspaceId}/projects`),
+  });
+}
