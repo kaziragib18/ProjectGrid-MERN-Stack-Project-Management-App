@@ -1,5 +1,5 @@
 import { SignUpSchema } from "@/lib/schema";
-import React from "react";
+import React, { useState } from "react"; // 👈 added useState for toggles
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
 import { useSignUpMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react"; // Icon import
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 
 export type SignupFormData = z.infer<typeof SignUpSchema>;
 
@@ -41,6 +41,10 @@ const SignUp = () => {
   });
 
   const { mutate, isPending } = useSignUpMutation();
+
+  // states for toggling visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleOnSubmit = (values: SignupFormData) => {
     mutate(values, {
@@ -128,11 +132,26 @@ const SignUp = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        {...field}
-                      />
+                      {/* 👇 wrapper for password input + toggle */}
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="********"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -146,11 +165,27 @@ const SignUp = () => {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="********"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowConfirmPassword((prev) => !prev)
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,7 +199,8 @@ const SignUp = () => {
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Creating Account
+                    <Loader2 className="w-4 h-4 animate-spin" /> Creating
+                    Account
                   </>
                 ) : (
                   "Sign up"

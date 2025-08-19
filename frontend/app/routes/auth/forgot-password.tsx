@@ -19,8 +19,6 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 import type { z } from "zod";
 
-
-
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
@@ -51,16 +49,12 @@ const ForgotPassword = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <div className="w-full max-w-md space-y-6">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <h1 className="text-2xl font-bold">Forgot Password</h1>
-          <p className="text-muted-foreground">
-            Enter your email to reset your password
-          </p>
-        </div>
-
         <Card>
           <CardHeader>
-            <Link to="/sign-in" className="flex items-center gap-2 text-sm hover:text-blue-400">
+            <Link
+              to="/sign-in"
+              className="flex items-center gap-2 text-sm hover:text-blue-400"
+            >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to sign in</span>
             </Link>

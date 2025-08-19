@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (data: any) => Promise<void>;
   logout: () => Promise<void>;
 }
+
 // Create a context for authentication state
 // This context will provide user information and authentication methods to the components
 // that need access to the authentication state
@@ -39,8 +40,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const storedUser = localStorage.getItem("user");
 
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
-          setIsAuthenticated(true);
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+          } catch (err) {
+            console.error("Failed to parse stored user:", err);
+            localStorage.removeItem("user");
+            setUser(null);
+            setIsAuthenticated(false);
+            if (!isPublicRoute) {
+              navigate("/sign-in");
+            }
+          }
         } else {
           setUser(null);
           setIsAuthenticated(false);
@@ -56,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkAuth();
-  }, []);
+  }, [navigate, isPublicRoute]);
 
   // Listen for a custom event to handle logout
   // This allows the application to respond to logout events triggered from anywhere in the app
@@ -68,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     window.addEventListener("force-logout", handleLogout);
     return () => window.removeEventListener("force-logout", handleLogout);
-  }, []);
+  }, [navigate]);
 
   const login = async (data: any) => {
     localStorage.setItem("token", data.token);
@@ -85,7 +97,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setIsAuthenticated(false);
 
-    queryClient.clear();
+    queryClient.clear(); // consider queryClient.removeQueries() if you only want to clear auth-related queries
   };
 
   const values = {

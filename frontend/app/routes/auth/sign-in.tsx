@@ -1,5 +1,5 @@
 import { SignInSchema } from "@/lib/schema";
-import React from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router";
-import { ArrowLeft, Loader, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"; // 👈 added Eye & EyeOff icons
 import { useLoginMutation } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useAuth } from "@/provider/auth-context";
@@ -32,7 +32,7 @@ type SignInFormData = z.infer<typeof SignInSchema>;
 
 const SignIn = () => {
   const navigate = useNavigate(); // Using useNavigate hook to programmatically navigate
-  const {login} = useAuth(); // Accessing the login function from AuthContext
+  const { login } = useAuth(); // Accessing the login function from AuthContext
 
   // Initialize the form with the SignInSchema
   // This schema defines the structure and validation rules for the sign-in form
@@ -43,9 +43,13 @@ const SignIn = () => {
       password: "",
     },
   });
+
   // This function handles the form submission
   // It uses the useLoginMutation hook to perform the login operation
-const {mutate, isPending} = useLoginMutation();
+  const { mutate, isPending } = useLoginMutation();
+
+  // 👇 state for password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleOnSubmit = (values: SignInFormData) => {
     mutate(values, {
@@ -55,9 +59,10 @@ const {mutate, isPending} = useLoginMutation();
         console.log("Login successful", data);
       },
       onError: (error) => {
-      const errorMessage = error?.response?.data?.message || "An error occurred during login";
-      toast.error(errorMessage);
-      console.error("Login error:", errorMessage);
+        const errorMessage =
+          error?.response?.data?.message || "An error occurred during login";
+        toast.error(errorMessage);
+        console.error("Login error:", errorMessage);
       },
     });
   };
@@ -122,11 +127,25 @@ const {mutate, isPending} = useLoginMutation();
                       </Link>
                     </div>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="*********"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="*********"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1} // prevent focus trap
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,13 +154,16 @@ const {mutate, isPending} = useLoginMutation();
 
               <Button
                 type="submit"
-                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200" disabled={isPending}
-              >{isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in
-                </>
-              ) : "Sign In"}
-        
+                className="w-full bg-black text-white hover:bg-blue-400 transition-colors duration-200"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Signing in
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </Form>

@@ -6,15 +6,17 @@ import User from "../models/user.js";
 // If the token is invalid or missing, it responds with an unauthorized status
 const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        message: "Unauthorized",
+        message: "No token provided",
       });
     }
 
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await User.findById(decoded.userId);
 
     if (!user) {
@@ -28,9 +30,10 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    }
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
 

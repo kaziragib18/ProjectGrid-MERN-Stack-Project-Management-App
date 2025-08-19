@@ -109,7 +109,7 @@ export const Header = ({
                 <Link to="/user/profile">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>Log Out</DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
