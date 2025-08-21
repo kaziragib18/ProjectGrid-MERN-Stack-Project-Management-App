@@ -30,7 +30,7 @@ const DashboardLayout = () => {
     return <CustomLoader />;
   }
   if (!isAuthenticated) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/sign-in" replace />;
   }
 
   const handleWorkspaceSelected = (workspace: Workspace) => {

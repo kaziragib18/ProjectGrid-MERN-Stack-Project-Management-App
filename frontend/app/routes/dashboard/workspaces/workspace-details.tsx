@@ -1,4 +1,5 @@
 import CustomLoader from "@/components/ui/customLoader";
+import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { useGetWorkspaceQuery } from "@/hooks/use-workspace";
 import type { Project, Workspace } from "@/types";
 import { useState } from "react";
@@ -14,7 +15,7 @@ const WorkspaceDetails = () => {
     return <div>No Workspace found</div>;
   }
 
-  const { data: workspace, isLoading } = useGetWorkspaceQuery(workspaceId) as {
+  const { data, isLoading } = useGetWorkspaceQuery(workspaceId) as {
     data: {
       workspace: Workspace;
       projects: Project[];
@@ -26,7 +27,16 @@ const WorkspaceDetails = () => {
     return <CustomLoader />;
   }
 
-  return <div>WorkspaceDetails</div>;
+  return (
+    <div className="space-y-4">
+      <WorkspaceHeader
+        workspace={data.workspace}
+        members={data?.workspace?.members as any}
+        onCreateProject={() => setIsCreateProject(true)}
+        onInviteMember={() => setIsInviteMember(true)}
+      />
+    </div>
+  );
 };
 
 export default WorkspaceDetails;
