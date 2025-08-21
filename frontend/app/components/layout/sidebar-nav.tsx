@@ -7,15 +7,16 @@ import { useLocation, useNavigate } from "react-router";
 // This component renders a sidebar navigation with a list of items
 // Each item can be a link to a different page in the application.
 // It also handles the active state of the items based on the current URL.
-interface SidebarNavProps extends React.HtmlHTMLAttributes<HTMLElement> { //
+interface SidebarNavProps extends React.HtmlHTMLAttributes<HTMLElement> {
+  //
   items: {
     title: string;
     href: string;
     icon: LucideIcon;
   }[];
-  
+
   isCollapsed: boolean;
-  currentWorkspace: Workspace | null; 
+  currentWorkspace: Workspace | null;
   className?: string; //
 }
 
@@ -28,7 +29,7 @@ export const SidebarNav = ({
   className,
   currentWorkspace,
   ...props
-}: SidebarNavProps) => { 
+}: SidebarNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -57,12 +58,15 @@ export const SidebarNav = ({
         return (
           <Button
             key={el.href}
-            variant={isActive ? "outline" : "ghost"}
-            className={cn(
-              "justify-start",
-              isActive && "bg-blue-400/20 text-blue-600 font-medium"
-            )}
+            variant="ghost"
             onClick={handleClick}
+            className={cn(
+              "relative justify-start w-full transition-all duration-300 ease-in-out",
+              "hover:bg-transparent", // disable hover bg
+              isActive
+                ? "border-2 border-slate-500 rounded-lg text-teal-700 font-medium"
+                : "border-2 border-transparent rounded-lg text-black-600"
+            )}
           >
             <Icon className="mr-2 size-4" />
             {isCollapsed ? (

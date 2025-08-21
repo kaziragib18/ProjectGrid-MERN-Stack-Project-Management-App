@@ -30,14 +30,13 @@ export interface Workspace {
 }
 
 export enum ProjectStatus {
-  Backlog = "Backlog",       // Task is logged but not started
-  ToDo = "To Do",            // Task is ready to start
-  InProgress = "In Progress",// Task is currently being worked on
-  Review = "Review",         // Task is completed and under review
-  Blocked = "Blocked",       // Task cannot proceed due to dependency/issues
+  Backlog = "Backlog",        // Task is logged but not started
+  ToDo = "To Do",             // Task is ready to start
+  InProgress = "In Progress", // Task is currently being worked on
+  Review = "In Review",      // Task is completed and under review
   OnHold = "On Hold",        // Task is paused temporarily
-  Cancelled = "Cancelled",   // Task will not be completed
   Completed = "Completed",   // Task is finished successfully
+  Cancelled = "Cancelled",   // Task will not be completed
   Archived = "Archived",     // Task is finished and stored for reference
 }
 
@@ -52,7 +51,7 @@ export interface Project {
   tasks: Task[];
   members: {
     user: User;
-    role: "owner" | "admin" | "member" | "viewer";
+    role: "owner" | "admin" | "member"| "contributor" | "viewer";
     joinedAt: Date;
   }[];
   createdAt: Date;
@@ -105,3 +104,9 @@ export interface Task {
   attachments?: Attachment[];
 }
 
+export interface MemberProps {
+  _id: string;
+  user: User;
+  role: "owner" | "admin" | "member" | "viewer";
+  joinedAt: Date;
+}

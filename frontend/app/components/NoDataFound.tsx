@@ -22,7 +22,10 @@ export const NoDataFound = ({
       <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
         {description}
       </p>
-      <Button onClick={buttonAction} className="mt-4">
+      <Button
+        onClick={buttonAction}
+        className="mt-4 cursor-pointer hover:bg-teal-600"
+      >
         <CirclePlus className="size-4 mr-2" />
         {buttonText}
       </Button>
