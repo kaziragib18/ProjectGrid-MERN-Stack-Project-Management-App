@@ -49,6 +49,7 @@ export const workspaceSchema = z.object({
   description: z.string().optional(),
 });
 
+
 // Project Schema
 // Validates a project entity
 // - Status must be one of the ProjectStatus enum values
@@ -68,5 +69,5 @@ export const projectSchema = z.object({
       })
     )
     .optional(),
-  tags: z.string().optional(),
+  // tags: z.string().optional(),
 });

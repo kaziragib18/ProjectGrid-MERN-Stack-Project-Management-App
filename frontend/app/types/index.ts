@@ -1,19 +1,13 @@
- // This file defines TypeScript interfaces for the application types used in the frontend.
-
-// Represents a user in the application
-// It includes details such as user ID, email, name, creation date, email verification status, and an optional profile picture.
- export interface User {
+export interface User {
   _id: string;
   email: string;
   name: string;
   createdAt: Date;
   isEmailVerified: boolean;
-  updatedAt: Date;  
-  profilePicture?: string; // Optional field for profile picture URL
+  updatedAt: Date;
+  profilePicture?: string;
 }
 
-// Represents a workspace in the application
-// It includes details about the workspace such as its name, description, owner, color, members, and timestamps.
 export interface Workspace {
   _id: string;
   name: string;
@@ -22,7 +16,7 @@ export interface Workspace {
   color: string;
   members: {
     user: User;
-    role: "owner" | "admin" | "member" | "viewer";
+    role: "admin" | "member" | "owner" | "viewer";
     joinedAt: Date;
   }[];
   createdAt: Date;
@@ -48,18 +42,16 @@ export interface Project {
   workspace: Workspace;
   startDate: Date;
   dueDate: Date;
+  progress: number;
   tasks: Task[];
   members: {
     user: User;
-    role: "owner" | "admin" | "member"| "contributor" | "viewer";
-    joinedAt: Date;
+    role: "admin" | "member" | "owner" | "viewer";
   }[];
   createdAt: Date;
   updatedAt: Date;
   isArchived: boolean;
-
 }
-
 export type TaskStatus = "To Do" | "In Progress" | "Done";
 export type TaskPriority = "High" | "Medium" | "Low";
 export enum ProjectMemberRole {
@@ -73,16 +65,6 @@ export interface Subtask {
   title: string;
   completed: boolean;
   createdAt: Date;
-}
-
-export interface Attachment {
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
-  uploadedBy: string;
-  uploadedAt: Date;
-  _id: string;
 }
 
 export interface Task {
@@ -104,9 +86,19 @@ export interface Task {
   attachments?: Attachment[];
 }
 
+export interface Attachment {
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+  _id: string;
+}
+
 export interface MemberProps {
   _id: string;
   user: User;
-  role: "owner" | "admin" | "member" | "viewer";
+  role: "admin" | "member" | "owner" | "viewer";
   joinedAt: Date;
 }
