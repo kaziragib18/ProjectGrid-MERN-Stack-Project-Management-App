@@ -302,7 +302,7 @@ export const CreateProjectDialog = ({
                         </PopoverTrigger>
 
                         <PopoverContent
-                          className="pointer-events-auto w-full max-w-60 overflow-y-auto"
+                          className="pointer-events-auto w-full max-w-100 overflow-y-auto"
                           align="start"
                           onInteractOutside={(e) => {
                             if (
