@@ -45,8 +45,8 @@ export const getProjectProgress = (tasks: { status: TaskStatus }[]) => {
   // Total number of tasks in the project
   const totalTasks = tasks.length;
 
-  // Count how many tasks have the status "Done"
-  const completedTasks = tasks.filter((task) => task?.status === "Done").length;
+  // Count how many tasks have the status "Completed"
+  const completedTasks = tasks.filter((task) => task?.status === "Completed").length;
 
   // Calculate progress percentage:
   // - If there are tasks, calculate the percentage of completed ones.
