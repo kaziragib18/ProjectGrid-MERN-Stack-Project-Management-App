@@ -248,21 +248,6 @@ export const CreateProjectDialog = ({
               />
             </div>
 
-            {/* Tags */}
-            {/* <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Tags separated by comma" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
-
             {/* Members */}
             <FormField
               control={form.control}

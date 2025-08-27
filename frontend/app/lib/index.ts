@@ -38,12 +38,21 @@ export const getTaskStatusColor = (status: ProjectStatus) => {
 };
 
 
+
+ //Calculates the progress of a project based on its tasks.
+
 export const getProjectProgress = (tasks: { status: TaskStatus }[]) => {
+  // Total number of tasks in the project
   const totalTasks = tasks.length;
 
+  // Count how many tasks have the status "Done"
   const completedTasks = tasks.filter((task) => task?.status === "Done").length;
 
+  // Calculate progress percentage:
+  // - If there are tasks, calculate the percentage of completed ones.
+  // - If no tasks exist, progress is 0%.
   const progress =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   return progress;
 };

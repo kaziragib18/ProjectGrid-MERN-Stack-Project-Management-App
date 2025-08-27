@@ -52,7 +52,7 @@ export interface Project {
   updatedAt: Date;
   isArchived: boolean;
 }
-export type TaskStatus = "To Do" | "In Progress" | "Done";
+export type TaskStatus = "To Do" | "In Progress" | "Completed";
 export type TaskPriority = "High" | "Medium" | "Low";
 export enum ProjectMemberRole {
   MANAGER = "manager",
