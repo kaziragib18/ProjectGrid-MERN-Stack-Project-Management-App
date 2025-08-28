@@ -97,8 +97,8 @@ export const CreateTaskDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
+            <div className="grid gap-6">
+              <div className="grid gap-6">
                 <FormField
                   control={form.control}
                   name="title"
@@ -282,10 +282,10 @@ export const CreateTaskDialog = ({
                             </PopoverTrigger>
 
                             <PopoverContent
-                              className="w-sm max-h-60 overflow-y-auto p-2"
+                              className="w-55 max-h-60 overflow-y-auto p-2"
                               align="start"
                             >
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-2 w-50">
                                 {projectMembers.map((member) => {
                                   const selectedMember = selectedMembers.find(
                                     (m) => m === member.user?._id
@@ -293,7 +293,7 @@ export const CreateTaskDialog = ({
                                   return (
                                     <div
                                       key={member.user._id}
-                                      className="flex items-center gap-2 p-2 border rounded"
+                                      className="flex items-center gap-2 p-2 border rounded w-50"
                                     >
                                       <Checkbox
                                         checked={!!selectedMember}
@@ -333,7 +333,11 @@ export const CreateTaskDialog = ({
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                className="hover:bg-teal-600"
+                type="submit"
+                disabled={isPending}
+              >
                 {isPending ? "Creating..." : "Create Task"}
               </Button>
             </DialogFooter>
