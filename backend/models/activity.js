@@ -28,12 +28,15 @@ const activityLogSchema = new Schema(
         "created_workspace",
         "updated_workspace",
         "added_comment",
+        "updated_comment",
+        "deleted_comment",
         "added_member",
         "removed_member",
         "joined_workspace",
         "transferred_workspace_ownership",
         "added_attachment",
-      ], // Restricts actions to predefined valid values
+      ],
+      // Restricts actions to predefined valid values
     },
 
     // Type of resource the action was performed on
@@ -58,6 +61,11 @@ const activityLogSchema = new Schema(
     timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 );
+
+// Optional indexes for better query performance
+activityLogSchema.index({ resourceId: 1 });
+activityLogSchema.index({ user: 1 });
+activityLogSchema.index({ createdAt: -1 });
 
 const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);
 

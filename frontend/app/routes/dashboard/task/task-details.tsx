@@ -1,18 +1,27 @@
+import { CommentSection } from "@/components/task/comment-section";
+import { SubTasksDetails } from "@/components/task/sub-tasks";
+import { TaskActivity } from "@/components/task/task-activity";
 import { TaskAssigneesSelector } from "@/components/task/task-assignees-selector";
 import { TaskDescription } from "@/components/task/task-description";
 import { TaskPrioritySelector } from "@/components/task/task-priority-selector";
 import { TaskStatusSelector } from "@/components/task/task-status-selector";
 import { TaskTitle } from "@/components/task/task-title";
+import { Watchers } from "@/components/task/watchers";
 import { BackButton } from "@/components/ui/backButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
-import { useTaskByIdQuery } from "@/hooks/use-task";
+import {
+  useAchievedTaskMutation,
+  useTaskByIdQuery,
+  useWatchTaskMutation,
+} from "@/hooks/use-task";
 import { useAuth } from "@/provider/auth-context";
 import type { Project, Task } from "@/types";
 import { formatDistanceToNow } from "date-fns";
-import { Archive, Eye, EyeOff } from "lucide-react";
+import { Delete, Eye, EyeOff } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 
 const TaskDetails = () => {
   const { user } = useAuth();
@@ -21,7 +30,6 @@ const TaskDetails = () => {
     projectId: string;
     workspaceId: string;
   }>();
-
   const navigate = useNavigate();
 
   const { data, isLoading } = useTaskByIdQuery(taskId!) as {
@@ -31,40 +39,71 @@ const TaskDetails = () => {
     };
     isLoading: boolean;
   };
-  if (isLoading)
+
+  const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
+  const { mutate: achievedTask, isPending: isAchieved } =
+    useAchievedTaskMutation();
+
+  if (isLoading) {
     return (
       <div>
         <CustomLoader />
       </div>
     );
+  }
 
   if (!data) {
     return (
-      <div className=" flex items-center justify-center h-full">
-        <div className=" text-2xl font-bold">Task not found</div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-2xl font-bold">Task not found</div>
       </div>
     );
   }
 
   const { task, project } = data;
+
   const isUserWatching = task?.watchers?.some(
     (watcher) => watcher._id.toString() === user?._id.toString()
   );
 
   const goBack = () => navigate(-1);
 
-  const members = task?.assignees || [];
+  const handleWatchTask = () => {
+    watchTask(
+      { taskId: task._id },
+      {
+        onSuccess: () => toast.success("Task watched"),
+        onError: () => toast.error("Failed to watch task"),
+      }
+    );
+  };
+
+  const handleAchievedTask = () => {
+    achievedTask(
+      { taskId: task._id },
+      {
+        onSuccess: () => toast.success("Task achieved"),
+        onError: () => toast.error("Failed to achieve task"),
+      }
+    );
+  };
 
   return (
     <div className="container mx-auto p-0 py-4 md:px-4">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-6">
-        <div className="flex flex-col md:flex-row md:items-center">
+      {/* Back Button with Horizontal Line */}
+      <div className="w-full mb-6">
+        <div className="flex items-center gap-4 px-2">
           <BackButton />
+          <hr className="flex-grow border-t border-gray-300" />
+        </div>
+      </div>
 
+      {/* Title and Action Buttons */}
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 px-2">
+        <div className="flex flex-col md:flex-row md:items-center">
           <h1 className="text-xl md:text-2xl font-bold">{task.title}</h1>
-
           {task.isArchived && (
-            <Badge className="ml-2" variant={"outline"}>
+            <Badge className="ml-2" variant="outline">
               Archived
             </Badge>
           )}
@@ -72,11 +111,11 @@ const TaskDetails = () => {
 
         <div className="flex space-x-2 mt-4 md:mt-0">
           <Button
-            variant={"outline"}
+            variant="outline"
             size="sm"
-            onClick={() => {}}
+            onClick={handleWatchTask}
             className="w-fit"
-            // disabled={isWatching}
+            disabled={isWatching}
           >
             {isUserWatching ? (
               <>
@@ -92,32 +131,35 @@ const TaskDetails = () => {
           </Button>
 
           <Button
-            variant={"outline"}
+            variant="outline"
             size="sm"
-            // onClick={handleAchievedTask}
-            onClick={() => {}}
+            onClick={handleAchievedTask}
             className="w-fit"
-            // disabled={isAchieved}
+            disabled={isAchieved}
           >
-            <Archive className="mr-2 size-4" />
             {task.isArchived ? "Unarchive" : "Archive"}
           </Button>
         </div>
       </div>
+
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="lg:col-span-2">
+        {/* Left side - 3/4 */}
+        <div className="lg:w-3/4 w-full">
           <div className="bg-card rounded-lg p-6 shadow-sm mb-6">
+            {/* Top Info Row */}
             <div className="flex flex-col md:flex-row justify-between items-start mb-4">
               <div>
                 <Badge
-                  variant={
-                    task.priority === "High"
-                      ? "destructive"
-                      : task.priority === "Medium"
-                        ? "default"
-                        : "outline"
-                  }
-                  className="mb-2 capitalize"
+                  className={`
+                    mb-2 capitalize
+                    ${
+                      task.priority === "High"
+                        ? "bg-red-100 text-red-700"
+                        : task.priority === "Medium"
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-green-100 text-green-700"
+                    }
+                  `}
                 >
                   {task.priority} Priority
                 </Badge>
@@ -132,39 +174,69 @@ const TaskDetails = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-4 md:mt-0">
+              <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
                 <TaskStatusSelector status={task.status} taskId={task._id} />
-
+                <TaskPrioritySelector
+                  priority={task.priority}
+                  taskId={task._id}
+                />
                 <Button
-                  variant={"destructive"}
+                  variant="destructive"
                   size="sm"
                   onClick={() => {}}
                   className="hidden md:block"
                 >
-                  Delete Task
+                  <Delete className="mr-2 size-4" />
                 </Button>
               </div>
             </div>
+
+            {/* Description */}
             <div className="mb-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-0">
                 Description
               </h3>
-
               <TaskDescription
                 description={task.description || ""}
                 taskId={task._id}
               />
             </div>
-            <TaskAssigneesSelector
-              task={task}
-              assignees={task.assignees}
-              projectMembers={project.members as any}
-            />
-            <TaskPrioritySelector priority={task.priority} taskId={task._id} />
+
+            {/* Subtasks and Assignees side by side with only middle border */}
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2 w-full pr-4 md:pr-6 border-r border-gray-300">
+                <SubTasksDetails
+                  subTasks={task.subtasks || []}
+                  taskId={task._id}
+                />
+              </div>
+
+              <div className="md:w-1/2 w-full pl-4 md:pl-6">
+                <TaskAssigneesSelector
+                  task={task}
+                  assignees={task.assignees}
+                  projectMembers={project.members as any}
+                />
+              </div>
+            </div>
           </div>
+          {user && (
+            <CommentSection
+              taskId={task._id}
+              members={project.members as any}
+              currentUser={user}
+            />
+          )}
+        </div>
+
+        {/* Right side - 1/4 */}
+        <div className="lg:w-1/4 w-full flex flex-col gap-6">
+          <Watchers watchers={task.watchers || []} />
+          <TaskActivity resourceId={task._id} />
         </div>
       </div>
     </div>
   );
 };
+
 export default TaskDetails;

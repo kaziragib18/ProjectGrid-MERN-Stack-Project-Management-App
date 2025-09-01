@@ -1,18 +1,16 @@
 import type { CreateTaskFormData } from "@/components/task/create-task-dialog";
-import { fetchData, postData, updateData } from "@/lib/fetch-util";
+import { deleteData, fetchData, postData, updateData } from "@/lib/fetch-util";
 import type { TaskPriority, TaskStatus } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Hook to create a new task in a specific project
 export const useCreateTaskMutation = () => {
-  const queryClient = useQueryClient(); // Access React Query's cache manager
+  const queryClient = useQueryClient();
 
   return useMutation({
-    // Function that makes the API call to create a task
     mutationFn: (data: { projectId: string; taskData: CreateTaskFormData }) =>
       postData(`/tasks/${data.projectId}/create-task`, data.taskData),
 
-    // After success, invalidate the relevant project query to refresh the task list
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({
         queryKey: ["project", data.project],
@@ -24,8 +22,8 @@ export const useCreateTaskMutation = () => {
 // Hook to fetch a task by its ID
 export const useTaskByIdQuery = (taskId: string) => {
   return useQuery({
-    queryKey: ["task", taskId], // Unique cache key for this task
-    queryFn: () => fetchData(`/tasks/${taskId}`), // Fetch task data from backend
+    queryKey: ["task", taskId],
+    queryFn: () => fetchData(`/tasks/${taskId}`),
   });
 };
 
@@ -37,7 +35,6 @@ export const useUpdateTaskTitleMutation = () => {
     mutationFn: (data: { taskId: string; title: string }) =>
       updateData(`/tasks/${data.taskId}/title`, { title: data.title }),
 
-    // Invalidate related caches (task and activity) to reflect updates
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
       queryClient.invalidateQueries({ queryKey: ["task-activity", data._id] });
@@ -163,18 +160,57 @@ export const useAddCommentMutation = () => {
 // Hook to fetch comments for a task
 export const useGetCommentsByTaskIdQuery = (taskId: string) => {
   return useQuery({
-    queryKey: ["comments", taskId], // Unique key per task's comments
+    queryKey: ["comments", taskId],
     queryFn: () => fetchData(`/tasks/${taskId}/comments`),
   });
 };
 
-// Hook to "watch" a task 
+// Hook to update a comment by its ID
+export const useUpdateTaskCommentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { commentId: string; text: string; taskId: string }) =>
+      updateData(`/tasks/${data.taskId}/comments/${data.commentId}`, { text: data.text }),
+
+    onSuccess: (data: any, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["comments", variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task-activity", variables.taskId] });
+    },
+  });
+};
+
+// Hook to delete a comment by its ID
+interface DeleteCommentVariables {
+  commentId: string;
+  taskId: string; // for cache invalidation
+}
+
+export const useDeleteCommentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, DeleteCommentVariables>({
+    mutationFn: ({ taskId, commentId }) =>
+      deleteData(`/tasks/${taskId}/comments/${commentId}`),
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["comments", variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task-activity", variables.taskId] });
+    },
+
+    onError: (error) => {
+      console.error("Failed to delete comment:", error);
+    },
+  });
+};
+
+// Hook to "watch" a task
 export const useWatchTaskMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: { taskId: string }) =>
-      postData(`/tasks/${data.taskId}/watch`, {}), // POST without payload
+      postData(`/tasks/${data.taskId}/watch`, {}),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
@@ -183,7 +219,7 @@ export const useWatchTaskMutation = () => {
   });
 };
 
-// Hook to mark a task as achieved (completed milestone)
+// Hook to mark a task as achieved
 export const useAchievedTaskMutation = () => {
   const queryClient = useQueryClient();
 
@@ -201,7 +237,7 @@ export const useAchievedTaskMutation = () => {
 // Hook to fetch the current user's assigned tasks
 export const useGetMyTasksQuery = () => {
   return useQuery({
-    queryKey: ["my-tasks", "user"], // Unique key for current user’s tasks
+    queryKey: ["my-tasks", "user"],
     queryFn: () => fetchData("/tasks/my-tasks"),
   });
 };
