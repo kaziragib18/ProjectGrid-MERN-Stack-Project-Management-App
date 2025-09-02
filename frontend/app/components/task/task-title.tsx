@@ -90,7 +90,7 @@ export const TaskTitle = ({
             onClick={() => setIsEditing(true)}
             aria-label="Edit title"
           >
-            <Edit className="size-5 text-muted-foreground hover:text-primary" />
+            <Edit className="size-4 text-muted-foreground hover:text-primary" />
           </Button>
         </>
       )}

@@ -10,7 +10,7 @@ import {
 } from "@/hooks/use-task";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import CustomLoader from "../ui/customLoader";
 import { Separator } from "../ui/separator";
 import { Edit, Check, X, Trash2 } from "lucide-react";
@@ -159,11 +159,21 @@ export const CommentSection = ({
                   <span className="font-medium text-sm text-foreground">
                     {comment.author.name}
                   </span>
-                  <span className="text-xs text-muted-foreground/80">
-                    {formatDistanceToNow(new Date(comment.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/80 cursor-default">
+                    <span title={format(new Date(comment.createdAt), "PPpp")}>
+                      {formatDistanceToNow(new Date(comment.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                    {comment.isEdited && (
+                      <span
+                        className="italic cursor-default"
+                        title={`Edited at: ${format(new Date(comment.updatedAt ?? comment.createdAt), "PPpp")}`}
+                      >
+                        (edited)
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* If editing this comment */}

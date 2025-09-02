@@ -150,6 +150,8 @@ export interface Comment {
   author: User;
   text: string;
   createdAt: Date;
+  isEdited?: boolean;
+  updatedAt?: string;
   reactions?: CommentReaction[];
   attachments?: {
     fileName: string;

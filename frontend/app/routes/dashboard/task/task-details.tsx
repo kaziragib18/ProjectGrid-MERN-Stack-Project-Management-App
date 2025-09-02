@@ -11,6 +11,7 @@ import { BackButton } from "@/components/ui/backButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
+import { Separator } from "@/components/ui/separator";
 import {
   useAchievedTaskMutation,
   useTaskByIdQuery,
@@ -193,7 +194,7 @@ const TaskDetails = () => {
 
             {/* Description */}
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-0">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">
                 Description
               </h3>
               <TaskDescription

@@ -84,7 +84,7 @@ export const TaskDescription = ({
             onClick={() => setIsEditing(true)}
             aria-label="Edit description"
           >
-            <Edit className="size-5 text-muted-foreground hover:text-primary" />
+            <Edit className="size-4 text-muted-foreground hover:text-primary" />
           </Button>
         </>
       )}
