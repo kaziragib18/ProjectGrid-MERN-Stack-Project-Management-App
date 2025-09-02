@@ -210,7 +210,7 @@ export const useWatchTaskMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string }) =>
-      postData(`/tasks/${data.taskId}/watch`, {}),
+      postData(`/tasks/${data.taskId}/watch`, {}), 
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
@@ -219,13 +219,13 @@ export const useWatchTaskMutation = () => {
   });
 };
 
-// Hook to mark a task as achieved
-export const useAchievedTaskMutation = () => {
+// Hook to mark a task as archived
+export const useArchivedTaskMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: { taskId: string }) =>
-      postData(`/tasks/${data.taskId}/achieved`, {}),
+      postData(`/tasks/${data.taskId}/archived`, {}),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });

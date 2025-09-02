@@ -11,16 +11,15 @@ import { BackButton } from "@/components/ui/backButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
-import { Separator } from "@/components/ui/separator";
 import {
-  useAchievedTaskMutation,
+  useArchivedTaskMutation,
   useTaskByIdQuery,
   useWatchTaskMutation,
 } from "@/hooks/use-task";
 import { useAuth } from "@/provider/auth-context";
 import type { Project, Task } from "@/types";
 import { formatDistanceToNow } from "date-fns";
-import { Delete, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
@@ -42,8 +41,8 @@ const TaskDetails = () => {
   };
 
   const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
-  const { mutate: achievedTask, isPending: isAchieved } =
-    useAchievedTaskMutation();
+  const { mutate: archivedTask, isPending: isArchived } =
+    useArchivedTaskMutation();
 
   if (isLoading) {
     return (
@@ -79,12 +78,12 @@ const TaskDetails = () => {
     );
   };
 
-  const handleAchievedTask = () => {
-    achievedTask(
+  const handleArchivedTask = () => {
+    archivedTask(
       { taskId: task._id },
       {
-        onSuccess: () => toast.success("Task achieved"),
-        onError: () => toast.error("Failed to achieve task"),
+        onSuccess: () => toast.success("Task archived"),
+        onError: () => toast.error("Failed to archived task"),
       }
     );
   };
@@ -134,9 +133,9 @@ const TaskDetails = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleAchievedTask}
+            onClick={handleArchivedTask}
             className="w-fit"
-            disabled={isAchieved}
+            disabled={isArchived}
           >
             {task.isArchived ? "Unarchive" : "Archive"}
           </Button>
@@ -187,7 +186,7 @@ const TaskDetails = () => {
                   onClick={() => {}}
                   className="hidden md:block"
                 >
-                  <Delete className="mr-2 size-4" />
+                  <Trash2 className="size-4" />
                 </Button>
               </div>
             </div>

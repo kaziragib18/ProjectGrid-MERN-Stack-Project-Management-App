@@ -1,6 +1,5 @@
 import { Header } from "@/components/layout/header";
 import { SidebarComponent } from "@/components/layout/sidebar-component";
-import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
 import { CreateWorkspace } from "@/components/workspace/create-workspace";
 import { fetchData } from "@/lib/fetch-util";

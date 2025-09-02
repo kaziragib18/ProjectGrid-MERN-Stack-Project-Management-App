@@ -29,14 +29,12 @@ export const CommentSection = ({
   const [editingText, setEditingText] = useState("");
   const [showAll, setShowAll] = useState(false);
 
-  // New state for tracking comment to delete and popup visibility
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const { mutate: addComment, isPending } = useAddCommentMutation();
   const { mutate: updateComment, isPending: isUpdating } =
     useUpdateTaskCommentMutation();
-
   const { mutate: deleteComment, isPending: isDeleting } =
     useDeleteCommentMutation();
 
@@ -95,19 +93,16 @@ export const CommentSection = ({
     );
   };
 
-  // Open confirmation popup instead of deleting immediately
   const handleDeleteClick = (commentId: string) => {
     setCommentToDelete(commentId);
     setIsConfirmOpen(true);
   };
 
-  // Cancel delete popup
   const cancelDelete = () => {
     setIsConfirmOpen(false);
     setCommentToDelete(null);
   };
 
-  // Confirm delete action
   const confirmDelete = () => {
     if (!commentToDelete) return;
 
@@ -130,6 +125,20 @@ export const CommentSection = ({
     );
   };
 
+  // Toggle this flag to true if testing with 3-minute threshold instead of 2 days
+  const TEST_MODE = false;
+
+  // Utility to check if date is older than 2 days (or 3 minutes in test mode)
+  const isOlderThanTwoDays = (dateInput: string | Date) => {
+    const date =
+      typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    const threshold = new Date();
+    TEST_MODE
+      ? threshold.setMinutes(threshold.getMinutes() - 3)
+      : threshold.setDate(threshold.getDate() - 2);
+    return date < threshold;
+  };
+
   if (isLoading) return <CustomLoader />;
 
   const displayedComments = showAll ? comments : comments?.slice(0, 5);
@@ -148,7 +157,7 @@ export const CommentSection = ({
               className="flex gap-4 p-4 bg-muted/30 border border-border/50 rounded-md transition-all"
             >
               {/* Avatar */}
-              <Avatar className="size-8 mt-1">
+              <Avatar className="size-8 mt-1 border-1 border-slate-300">
                 <AvatarImage src={comment.author.profilePicture} />
                 <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
               </Avatar>
@@ -159,16 +168,31 @@ export const CommentSection = ({
                   <span className="font-medium text-sm text-foreground">
                     {comment.author.name}
                   </span>
+
                   <div className="flex items-center gap-2 text-xs text-muted-foreground/80 cursor-default">
-                    <span title={format(new Date(comment.createdAt), "PPpp")}>
-                      {formatDistanceToNow(new Date(comment.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </span>
+                    {(() => {
+                      const createdAt = new Date(comment.createdAt);
+                      const isOld = isOlderThanTwoDays(createdAt);
+                      const formattedFull = format(createdAt, "PPpp");
+
+                      return (
+                        <span className="text-xs" title={formattedFull}>
+                          {isOld
+                            ? formattedFull
+                            : formatDistanceToNow(createdAt, {
+                                addSuffix: true,
+                              })}
+                        </span>
+                      );
+                    })()}
+
                     {comment.isEdited && (
                       <span
                         className="italic cursor-default"
-                        title={`Edited at: ${format(new Date(comment.updatedAt ?? comment.createdAt), "PPpp")}`}
+                        title={`Edited at: ${format(
+                          new Date(comment.updatedAt ?? comment.createdAt),
+                          "PPpp"
+                        )}`}
                       >
                         (edited)
                       </span>

@@ -7,6 +7,7 @@ import { taskSchema } from "../libs/validate-schema.js";
 import {
   addComment,
   addSubTask,
+  archivedTask,
   createTask,
   deleteTaskComment,
   getActivityByResourceId,
@@ -19,6 +20,7 @@ import {
   updateTaskPriority,
   updateTaskStatus,
   updateTaskTitle,
+  watchTask,
 } from "../controllers/task.js";
 
 import authMiddleware from "../middleware/auth-middleware.js";
@@ -67,6 +69,43 @@ router.post(
 );
 
 // ================================
+//  Create comment reactions
+// ================================
+// router.post(
+//   "/:taskId/add-reactions",
+//   authMiddleware,
+//   validateRequest({
+//     params: z.object({ taskId: z.string() }),
+//     body: z.object({ text: z.string() }),
+//   }),
+//   commentReaction
+// );
+
+// ================================
+//  Create watcher
+// ================================
+router.post(
+  "/:taskId/watch",
+  authMiddleware,
+  validateRequest({
+    params: z.object({ taskId: z.string() }),
+  }),
+  watchTask
+);
+
+// ================================
+//  Create archieve
+// ================================
+router.post(
+  "/:taskId/archived",
+  authMiddleware,
+  validateRequest({
+    params: z.object({ taskId: z.string() }),
+  }),
+  archivedTask
+);
+
+// ================================
 // Update a task's title
 // ================================
 router.put(
@@ -75,9 +114,6 @@ router.put(
   validateRequest({
     params: z.object({
       taskId: z.string(),
-    }),
-    body: z.object({
-      title: z.string(),
     }),
   }),
   updateTaskTitle
@@ -235,6 +271,10 @@ router.put(
   }),
   updateTaskComment
 );
+
+// ================================
+// Delete a specific comment by ID
+// ================================
 
 router.delete(
   "/:taskId/comments/:commentId",

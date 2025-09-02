@@ -11,7 +11,6 @@ import {
   Orbit,
   Settings,
   Users,
-  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router";
@@ -48,8 +47,8 @@ export const SidebarComponent = ({
       icon: Users,
     },
     {
-      title: "Achieved",
-      href: `/achieved`,
+      title: "Archived",
+      href: `/archived`,
       icon: CheckCircle2,
     },
     {
@@ -102,7 +101,7 @@ export const SidebarComponent = ({
           currentWorkspace={currentWorkspace}
         />
       </ScrollArea>
-      
+
       <div
         className={cn("flex", isCollapsed ? "justify-center items-center" : "")}
       >
