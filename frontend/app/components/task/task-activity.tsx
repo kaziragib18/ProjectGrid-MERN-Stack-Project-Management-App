@@ -41,7 +41,7 @@ export const TaskActivity = ({ resourceId }: { resourceId: string }) => {
 
   return (
     <div className="bg-card rounded-lg p-4 sm:p-6 shadow-sm w-full">
-      <h3 className="text-lg text-muted-foreground mb-4">Activity Logs</h3>
+      <h3 className="text-lg text-black mb-4">Activity Logs</h3>
 
       {visibleLogs && visibleLogs.length > 0 ? (
         <div className="space-y-4">

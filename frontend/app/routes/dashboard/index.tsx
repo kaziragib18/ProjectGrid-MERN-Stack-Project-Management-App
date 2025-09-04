@@ -42,7 +42,7 @@ const Dashboard = () => {
   if (!workspaceId) {
     return (
       <div className="p-8 text-center text-red-600 font-semibold">
-        Workspace ID is missing. Please select a workspace.
+        Please select a workspace.
       </div>
     );
   }
@@ -65,7 +65,6 @@ const Dashboard = () => {
         <h1 className="text-2xl font-bold">Dashboard</h1>
       </div>
       <StatsCard data={data.stats} />
-      {/* You can add more dashboard components here */}
     </div>
   );
 };

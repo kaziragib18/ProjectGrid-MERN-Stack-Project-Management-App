@@ -28,8 +28,6 @@ export const useGetWorkspaceQuery = (workspaceId: string) => {
   });
 }
 
-
-
 // Hook to get workspace stats (dashboard)
 // Includes task trends, priorities, project statuses, etc.
 export const useGetWorkspaceStatsQuery = (workspaceId: string) => { 

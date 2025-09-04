@@ -37,19 +37,24 @@ const Workspaces = () => {
 
   return (
     <>
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-bold">Workspaces</h2>
+      <div className="space-y-6 sm:space-y-8 px-4 md:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+            Workspaces
+          </h2>
+
           {/* New Workspace button with hover color effect */}
           <Button
             onClick={() => setIsCreatingWorkspace(true)}
-            className="transition-colors duration-200 hover:bg-teal-600 cursor-pointer"
+            className="w-full sm:w-auto transition-colors duration-200 hover:bg-teal-600"
           >
-            <PlusCircle className="size-4 mr-2" /> New Workspace
+            <PlusCircle className="size-4 mr-2" />
+            New Workspace
           </Button>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Responsive workspace grid for all screen sizes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {workspaces.map((ws) => (
             <WorkspaceCard key={ws._id} workspace={ws} />
           ))}
@@ -65,6 +70,7 @@ const Workspaces = () => {
         </div>
       </div>
 
+      {/* Modal for workspace creation */}
       <CreateWorkspace
         isCreatingWorkspace={isCreatingWorkspace}
         setIsCreatingWorkspace={setIsCreatingWorkspace}
@@ -80,7 +86,8 @@ const WorkspaceCard = ({ workspace }: { workspace: Workspace }) => {
   return (
     <Link to={`/workspaces/${workspace._id}`}>
       <Card
-        className="transition-all hover:shadow-md hover:-translate-y-1 border-2 flex flex-col h-48"
+        // Animate hover and show colored border
+        className="transition-all hover:shadow-md hover:-translate-y-1 border-2 flex flex-col h-full cursor-pointer"
         style={{
           borderColor: isHovered ? workspace.color : "transparent",
         }}
@@ -89,31 +96,35 @@ const WorkspaceCard = ({ workspace }: { workspace: Workspace }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <CardHeader className="pb-2 flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
+          <div className="flex items-start justify-between">
+            <div className="flex gap-3 items-start">
               <WorkspaceAvatar name={workspace.name} color={workspace.color} />
-              <div>
-                <CardTitle>{workspace.name}</CardTitle>
-                {/* This format string specifies how the date should be displayed: day (d), month (MM), year (yyyy), hour (h), minutes (mm), and AM/PM (a). */}
+              <div className="space-y-0.5">
+                <CardTitle className="text-base">{workspace.name}</CardTitle>
+                {/* This format string specifies how the date should be displayed: day (d), month (MMM), year (yyyy), hour (h), minutes (mm), and AM/PM (a). */}
                 <span className="text-xs text-muted-foreground">
-                  Created at {format(workspace.createdAt, "d MM yyyy h:mm a")}
+                  Created at {format(workspace.createdAt, "d MMM yyyy h:mm a")}
                 </span>
               </div>
             </div>
-            <div className="flex items-center text-muted-foreground">
+
+            {/* Show number of members in the workspace */}
+            <div className="flex items-center text-muted-foreground mt-1">
               <Users className="size-4 mr-1" />
               <span className="text-xs">{workspace.members.length}</span>
             </div>
           </div>
+
           {/* Limit description to max 2 lines */}
-          <CardDescription className="text-sm text-muted-foreground line-clamp-2 mt-1">
+          <CardDescription className="text-sm text-muted-foreground line-clamp-2 mt-2">
             {workspace.description || "No description"}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
-          <div className="text-sm text-muted-foreground ">
+          <p className="text-sm text-muted-foreground">
             View workspace details and projects
-          </div>
+          </p>
         </CardContent>
       </Card>
     </Link>

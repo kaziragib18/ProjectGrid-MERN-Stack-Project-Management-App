@@ -18,7 +18,7 @@ import {
 } from "@/hooks/use-task";
 import { useAuth } from "@/provider/auth-context";
 import type { Project, Task } from "@/types";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -87,6 +87,11 @@ const TaskDetails = () => {
       }
     );
   };
+
+  // Calculate time since creation
+  const createdAtDate = new Date(task.createdAt);
+  const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
+  const timeSinceCreation = Date.now() - createdAtDate.getTime();
 
   return (
     <div className="container mx-auto p-0 py-4 md:px-4">
@@ -166,11 +171,11 @@ const TaskDetails = () => {
 
                 <TaskTitle title={task.title} taskId={task._id} />
 
-                <div className="text-sm md:text-base text-muted-foreground">
+                <div className="text-sm text-muted-foreground mt-1">
                   Created at:{" "}
-                  {formatDistanceToNow(new Date(task.createdAt), {
-                    addSuffix: true,
-                  })}
+                  {timeSinceCreation < twoDaysInMs
+                    ? formatDistanceToNow(createdAtDate, { addSuffix: true })
+                    : format(createdAtDate, "PPpp")}
                 </div>
               </div>
 
