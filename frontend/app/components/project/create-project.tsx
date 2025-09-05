@@ -56,6 +56,7 @@ export const CreateProjectDialog = ({
 }: CreateProjectDialogProps) => {
   const form = useForm<CreateProjectFormData>({
     resolver: zodResolver(projectSchema),
+    mode: "all",
     defaultValues: {
       title: "",
       description: "",
@@ -380,7 +381,10 @@ export const CreateProjectDialog = ({
             />
 
             <DialogFooter>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="submit"
+                disabled={isPending || !form.formState.isValid}
+              >
                 {isPending ? "Creating..." : "Create Project"}
               </Button>
             </DialogFooter>

@@ -106,7 +106,7 @@ const TaskDetails = () => {
       {/* Title and Action Buttons */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 px-2">
         <div className="flex flex-col md:flex-row md:items-center">
-          <h1 className="text-xl md:text-2xl font-bold">{task.title}</h1>
+          <h1 className="text-xl md:text-2xl font-semibold">{task.title}</h1>
           {task.isArchived && (
             <Badge className="ml-2" variant="outline">
               Archived
@@ -151,12 +151,13 @@ const TaskDetails = () => {
         {/* Left side - 3/4 */}
         <div className="lg:w-3/4 w-full">
           <div className="bg-card rounded-lg p-6 shadow-sm mb-6">
-            {/* Top Info Row */}
-            <div className="flex flex-col md:flex-row justify-between items-start mb-4">
+            {/* Top Row */}
+            <div className="flex items-center justify-between mb-2 px-2">
+              {/* Right side: Priority Badge */}
               <div>
                 <Badge
                   className={`
-                    mb-2 capitalize
+                    capitalize
                     ${
                       task.priority === "High"
                         ? "bg-red-100 text-red-700"
@@ -168,18 +169,10 @@ const TaskDetails = () => {
                 >
                   {task.priority} Priority
                 </Badge>
-
-                <TaskTitle title={task.title} taskId={task._id} />
-
-                <div className="text-sm text-muted-foreground mt-1">
-                  Created at:{" "}
-                  {timeSinceCreation < twoDaysInMs
-                    ? formatDistanceToNow(createdAtDate, { addSuffix: true })
-                    : format(createdAtDate, "PPpp")}
-                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+              {/* Left side: Status Selector, Priority Selector, Trash Button */}
+              <div className="flex items-center space-x-4">
                 <TaskStatusSelector status={task.status} taskId={task._id} />
                 <TaskPrioritySelector
                   priority={task.priority}
@@ -189,15 +182,26 @@ const TaskDetails = () => {
                   variant="destructive"
                   size="sm"
                   onClick={() => {}}
-                  className="hidden md:block"
+                  className=""
                 >
                   <Trash2 className="size-4" />
                 </Button>
               </div>
             </div>
-
+            <hr className="mb-4" />
+            {/* Task Title */}
+            <div className="px-2 mb-6">
+              <TaskTitle title={task.title} taskId={task._id} />
+            </div>
+            {/* Created at info */}
+            <div className="text-sm text-muted-foreground mb-6 px-2">
+              Created at:{" "}
+              {timeSinceCreation < twoDaysInMs
+                ? formatDistanceToNow(createdAtDate, { addSuffix: true })
+                : format(createdAtDate, "PPpp")}
+            </div>
             {/* Description */}
-            <div className="mb-6">
+            <div className="mb-6 px-2">
               <h3 className="text-sm font-medium text-muted-foreground mb-1">
                 Description
               </h3>
@@ -206,9 +210,9 @@ const TaskDetails = () => {
                 taskId={task._id}
               />
             </div>
-
+            <hr className="mb-6" /> {/* <-- Added horizontal line here */}
             {/* Subtasks and Assignees side by side with only middle border */}
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row gap-6 px-2">
               <div className="md:w-1/2 w-full pr-4 md:pr-6 border-r border-gray-300">
                 <SubTasksDetails
                   subTasks={task.subtasks || []}

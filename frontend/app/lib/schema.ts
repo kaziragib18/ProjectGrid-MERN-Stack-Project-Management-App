@@ -68,7 +68,7 @@ export const projectSchema = z.object({
         role: z.enum(["manager", "contributor", "viewer"]),
       })
     )
-    .optional(),
+    .min(1, "Please select at least one member"), // Required members
   // tags: z.string().optional(),
 });
 

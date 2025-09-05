@@ -30,9 +30,11 @@ export const useGetWorkspaceQuery = (workspaceId: string) => {
 
 // Hook to get workspace stats (dashboard)
 // Includes task trends, priorities, project statuses, etc.
-export const useGetWorkspaceStatsQuery = (workspaceId: string) => { 
+export const useGetWorkspaceStatsQuery = (workspaceId: string, options = {}) => {
   return useQuery({
     queryKey: ["workspace", workspaceId, "stats"],
     queryFn: async () => fetchData(`/workspaces/${workspaceId}/stats`),
+    enabled: !!workspaceId,
+    ...options,
   });
-}
+};

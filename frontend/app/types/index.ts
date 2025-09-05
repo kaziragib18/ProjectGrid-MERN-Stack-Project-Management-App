@@ -23,7 +23,7 @@ export interface Workspace {
   updatedAt: Date;
 }
 
-export enum ProjectStatus {
+export enum ProjectStatus { 
   Backlog = "Backlog",        // Task is logged but not started
   ToDo = "To Do",             // Task is ready to start
   InProgress = "In Progress", // Task is currently being worked on
@@ -188,6 +188,7 @@ export interface ProjectStatusData {
   value: number;
   color: string;
 }
+
 
 export interface WorkspaceProductivityData {
   name: string;

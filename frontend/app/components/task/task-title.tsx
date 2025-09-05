@@ -50,7 +50,7 @@ export const TaskTitle = ({
       {isEditing ? (
         <>
           <Input
-            className="text-xl font-semibold flex-grow min-w-0"
+            className="text-xl font-medium flex-grow min-w-0"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             disabled={isPending}
