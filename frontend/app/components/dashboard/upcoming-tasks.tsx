@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "../ui/card";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle } from "lucide-react";
 import { format } from "date-fns";

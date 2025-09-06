@@ -200,6 +200,7 @@ export const StatisticsCharts = ({
       </Card>
 
       {/* Project Status Pie Chart with outside labels and connector lines */}
+      {/* Project Status Pie Chart with fallback when no data */}
       <Card>
         <CardHeader className="flex justify-between items-center pb-2">
           <div>
@@ -213,37 +214,43 @@ export const StatisticsCharts = ({
 
         <CardContent>
           <ChartContainer
-            className="h-[300px] w-full"
+            className="h-[300px] w-full flex items-center justify-center"
             config={{
               Completed: { color: "#10b981" },
               "In Progress": { color: "#3b82f6" },
               Planning: { color: "#f59e0b" },
             }}
           >
-            <PieChart>
-              <Pie
-                data={projectStatusData.filter((entry) => entry.value > 0)} // <-- Filter here
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
-                labelLine={false}
-              >
-                {projectStatusData
-                  .filter((entry) => entry.value > 0)
-                  .map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-              </Pie>
-              <ChartTooltip />
-              <ChartLegend content={<ChartLegendContent />} />
-            </PieChart>
+            {projectStatusData.filter((entry) => entry.value > 0).length > 0 ? (
+              <PieChart>
+                <Pie
+                  data={projectStatusData.filter((entry) => entry.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
+                  labelLine={false}
+                >
+                  {projectStatusData
+                    .filter((entry) => entry.value > 0)
+                    .map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                </Pie>
+                <ChartTooltip />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            ) : (
+              <div className="text-center text-muted-foreground text-sm">
+                Currently no task is in progress or completed.
+              </div>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>

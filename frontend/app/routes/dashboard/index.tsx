@@ -2,7 +2,7 @@ import { RecentProjects } from "@/components/dashboard/recent-projects";
 import { StatsCard } from "@/components/dashboard/stat-card";
 import { StatisticsCharts } from "@/components/dashboard/statistics-charts";
 import CustomLoader from "@/components/ui/customLoader";
-import { UpcomingTasks } from "@/components/upcoming-tasks";
+import { UpcomingTasks } from "@/components/dashboard/upcoming-tasks";
 import { useGetWorkspaceStatsQuery } from "@/hooks/use-workspace";
 import type {
   Project,
