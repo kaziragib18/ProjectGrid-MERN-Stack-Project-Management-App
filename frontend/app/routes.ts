@@ -34,6 +34,16 @@ export default [
       "workspaces/:workspaceId/projects/:projectId/tasks/:taskId",
       "routes/dashboard/task/task-details.tsx"
     ),
+      // My Tasks page
     route("my-tasks", "routes/dashboard/my-tasks.tsx"), 
+      // Members page
+    route("members", "routes/dashboard/members.tsx"),
+      // Archived tasks page
+    route("archived-tasks", "routes/dashboard/archieved.tsx"), 
+    //workspace settings page
+    route(
+  "workspaces/:workspaceId/settings",
+  "routes/dashboard/settings.tsx"
+)
   ]),
 ] satisfies RouteConfig;

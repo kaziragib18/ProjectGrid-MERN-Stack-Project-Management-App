@@ -6,6 +6,7 @@ export interface User {
   isEmailVerified: boolean;
   updatedAt: Date;
   profilePicture?: string;
+  currentWorkspaceId?: string;
 }
 
 export interface Workspace {

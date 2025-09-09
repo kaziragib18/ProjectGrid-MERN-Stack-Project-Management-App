@@ -12,8 +12,10 @@ import {
   DropdownMenuGroup,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Link, useLoaderData, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { WorkspaceAvatar } from "../workspace/workspace-avatar";
+import { useGetWorkspacesQuery } from "@/hooks/use-workspace";
+import { useEffect } from "react";
 
 interface HeaderProps {
   onWorkspaceSelected: (workspace: Workspace) => void;
@@ -28,26 +30,33 @@ export const Header = ({
 }: HeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const location = useLocation();
 
-  // Workspaces from route loader
-  const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
-  const isWorkspacePage = useLocation().pathname.includes("/workspace");
+  // Fetch all workspaces using React Query hook
+  // Default to empty array if data is undefined
+  const { data: workspaces = [] } = useGetWorkspacesQuery();
 
+  const isWorkspacePage = location.pathname.includes("/workspaces");
+
+  // Automatically select the first workspace if none is selected
+  useEffect(() => {
+    if (!selectedWorkspace && workspaces.length > 0) {
+      onWorkspaceSelected(workspaces[0]);
+    }
+  }, [selectedWorkspace, workspaces, onWorkspaceSelected]);
+
+  // Handle selecting a workspace from the dropdown
   const handleOnClick = (workspace: Workspace) => {
     onWorkspaceSelected(workspace);
 
-    const location = window.location;
-
     if (isWorkspacePage) {
+      // If already on a workspace page, navigate to the new workspace route
       navigate(`/workspaces/${workspace._id}`);
     } else {
-      const basePath = location.pathname;
-
-      navigate(`${basePath}?workspaceId=${workspace._id}`);
+      // Otherwise, update query param with selected workspace ID
+      navigate(`${location.pathname}?workspaceId=${workspace._id}`);
     }
   };
-
-  // console.log(workspaces);
 
   return (
     <div className="bg-background sticky top-0 z-40 border-b">
@@ -67,6 +76,10 @@ export const Header = ({
                     {selectedWorkspace.name}
                   </span>
                 </>
+              ) : workspaces.length === 0 ? (
+                <span className="font-medium text-muted-foreground">
+                  No workspace — create one
+                </span>
               ) : (
                 <span className="font-medium">Select Workspace</span>
               )}

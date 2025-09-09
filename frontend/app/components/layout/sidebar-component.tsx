@@ -53,7 +53,9 @@ export const SidebarComponent = ({
     },
     {
       title: "Settings",
-      href: "/settings",
+      href: currentWorkspace
+        ? `/workspaces/${currentWorkspace._id}/settings`
+        : "/workspaces", // fallback route if no workspace is selected
       icon: Settings,
     },
   ];

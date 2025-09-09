@@ -7,8 +7,12 @@ import {
   getWorkspaceProjects,
   getWorkspaces,
   getWorkspaceStats,
+  updateWorkspace,
 } from "../controllers/workspace.js";
-import { workspaceSchema } from "../libs/validate-schema.js";
+import {
+  updateWorkspaceSchema,
+  workspaceSchema,
+} from "../libs/validate-schema.js";
 
 const router = express.Router();
 
@@ -25,5 +29,12 @@ router.get("/:workspaceId", authMiddleware, getWorkspaceDetails);
 // Route to create a project
 router.get("/:workspaceId/projects", authMiddleware, getWorkspaceProjects);
 router.get("/:workspaceId/stats", authMiddleware, getWorkspaceStats);
+// Route to update a workspace
+router.put(
+  "/:workspaceId",
+  authMiddleware,
+  validateRequest({ body: updateWorkspaceSchema }),
+  updateWorkspace
+);
 
 export default router;

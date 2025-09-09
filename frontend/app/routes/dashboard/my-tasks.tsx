@@ -22,7 +22,7 @@ import { useGetMyTasksQuery } from "@/hooks/use-task";
 import type { Task } from "@/types";
 import { format } from "date-fns";
 import { ArrowUpRight, CheckCircle, Clock, FilterIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
 /**
@@ -179,7 +179,9 @@ const MyTasks = () => {
   const inProgressTasks = sortedTasks.filter(
     (task) => task.status === "In Progress"
   );
-  const doneTasks = sortedTasks.filter((task) => task.status === "Completed");
+  const completedTasks = sortedTasks.filter(
+    (task) => task.status === "Completed"
+  );
 
   // Loading state
   if (isLoading) return <CustomLoader />;
@@ -359,7 +361,7 @@ const MyTasks = () => {
             {[
               { title: "To Do", tasks: todoTasks },
               { title: "In Progress", tasks: inProgressTasks },
-              { title: "Completed", tasks: doneTasks },
+              { title: "Completed", tasks: completedTasks },
             ].map(({ title, tasks }) => (
               <Card key={title} className="flex flex-col">
                 <CardHeader>

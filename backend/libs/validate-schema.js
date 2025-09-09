@@ -69,6 +69,24 @@ const workspaceSchema = z.object({
     }),
 });
 
+// Schema for updating workspace
+const updateWorkspaceSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Workspace name must be at least 3 characters")
+    .optional(),
+  color: z
+    .string()
+    .regex(/^#([0-9A-Fa-f]{3}){1,2}$/, "Color must be a valid hex code")
+    .optional(),
+  description: z
+    .string()
+    .optional()
+    .refine((desc) => desc === undefined || desc.trim().length > 0, {
+      message: "Description cannot be empty",
+    }),
+});
+
 const projectSchema = z
   .object({
     title: z.string().min(3, "Title is required"),
@@ -122,4 +140,5 @@ export {
   workspaceSchema,
   projectSchema,
   taskSchema,
+  updateWorkspaceSchema,
 };

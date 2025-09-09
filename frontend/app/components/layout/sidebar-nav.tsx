@@ -8,7 +8,6 @@ import { useLocation, useNavigate } from "react-router";
 // Each item can be a link to a different page in the application.
 // It also handles the active state of the items based on the current URL.
 interface SidebarNavProps extends React.HtmlHTMLAttributes<HTMLElement> {
-  //
   items: {
     title: string;
     href: string;
@@ -17,7 +16,7 @@ interface SidebarNavProps extends React.HtmlHTMLAttributes<HTMLElement> {
 
   isCollapsed: boolean;
   currentWorkspace: Workspace | null;
-  className?: string; //
+  className?: string;
 }
 
 // SidebarNav component

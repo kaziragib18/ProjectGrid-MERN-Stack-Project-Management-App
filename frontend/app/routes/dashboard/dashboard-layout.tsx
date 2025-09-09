@@ -2,21 +2,10 @@ import { Header } from "@/components/layout/header";
 import { SidebarComponent } from "@/components/layout/sidebar-component";
 import CustomLoader from "@/components/ui/customLoader";
 import { CreateWorkspace } from "@/components/workspace/create-workspace";
-import { fetchData } from "@/lib/fetch-util";
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import React, { useState } from "react";
 import { Navigate, Outlet } from "react-router";
-
-export const clientLoader = async () => {
-  try {
-    const [workspaces] = await Promise.all([fetchData("/workspaces")]);
-    return { workspaces };
-  } catch (error) {
-    console.error("Error in clientLoader:", error);
-    throw error;
-  }
-};
 
 const DashboardLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -32,6 +21,7 @@ const DashboardLayout = () => {
     return <Navigate to="/sign-in" replace />;
   }
 
+  // This function will be passed down to Header and triggered when workspace changes
   const handleWorkspaceSelected = (workspace: Workspace) => {
     setCurrentWorkspace(workspace);
   };
@@ -42,8 +32,8 @@ const DashboardLayout = () => {
 
       <div className="flex flex-1 flex-col h-full">
         <Header
-          onWorkspaceSelected={handleWorkspaceSelected}
           selectedWorkspace={currentWorkspace}
+          onWorkspaceSelected={handleWorkspaceSelected}
           onCreateWorkspace={() => setIsCreatingWorkspace(true)}
         />
         <main className="flex-1 overflow-y-auto h-full w-full">

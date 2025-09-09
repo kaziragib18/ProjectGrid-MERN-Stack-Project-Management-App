@@ -300,10 +300,55 @@ const getWorkspaceStats = async (req, res) => {
   }
 };
 
+/**
+ * UPDATE WORKSPACE
+ * - Updates workspace name, description, and color
+ * - Only members with appropriate roles can update
+ */
+const updateWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { name, description, color } = req.body;
+
+    // Find workspace where user is a member
+    const workspace = await Workspace.findOne({
+      _id: workspaceId,
+      "members.user": req.user._id,
+    });
+
+    if (!workspace) {
+      return res
+        .status(404)
+        .json({ message: "Workspace not found or access denied" });
+    }
+
+    // Optionally check if user has admin or owner role to allow edit
+    const member = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+
+    // Update fields if provided
+    if (name !== undefined) workspace.name = name;
+    if (description !== undefined) workspace.description = description;
+    if (color !== undefined) workspace.color = color;
+
+    await workspace.save();
+
+    res.status(200).json(workspace);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
   getWorkspaceDetails,
   getWorkspaceProjects,
   getWorkspaceStats,
+  updateWorkspace,
 };
