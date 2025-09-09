@@ -12,6 +12,7 @@ import {
   deleteTaskComment,
   getActivityByResourceId,
   getCommentsByTaskId,
+  getMyTasks,
   getTaskById,
   updateSubTask,
   updateTaskAssignees,
@@ -154,6 +155,12 @@ router.put(
   }),
   updateTaskStatus
 );
+
+// ================================
+// Get tasks
+// ================================
+
+router.get("/my-tasks", authMiddleware, getMyTasks);
 
 // ================================
 // Update a task's assignees
