@@ -3,6 +3,7 @@ import { validateRequest } from "zod-express-middleware";
 import authMiddleware from "../middleware/auth-middleware.js";
 import {
   createWorkspace,
+  deleteWorkspace,
   getWorkspaceDetails,
   getWorkspaceProjects,
   getWorkspaces,
@@ -36,5 +37,8 @@ router.put(
   validateRequest({ body: updateWorkspaceSchema }),
   updateWorkspace
 );
+
+//delete workspace and all related projects + tasks
+router.delete("/:workspaceId", authMiddleware, deleteWorkspace);
 
 export default router;

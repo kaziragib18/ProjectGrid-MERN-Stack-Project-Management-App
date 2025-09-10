@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Trash2,
+  AlertTriangle,
+  Settings as SettingsIcon,
+} from "lucide-react"; // Added SettingsIcon
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import CustomLoader from "@/components/ui/customLoader";
 import type { WorkspaceForm } from "@/components/workspace/create-workspace";
 import { workspaceSchema } from "@/lib/schema";
-import { fetchData, updateData } from "@/lib/fetch-util";
+import { fetchData, updateData, deleteData } from "@/lib/fetch-util";
 import {
   Form,
   FormControl,
@@ -20,6 +25,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const colorOptions = [
   "#4F46E5",
@@ -34,8 +46,12 @@ export const colorOptions = [
 
 const Settings = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm<WorkspaceForm>({
     resolver: zodResolver(workspaceSchema),
@@ -45,17 +61,6 @@ const Settings = () => {
       color: colorOptions[0],
     },
   });
-
-  if (!workspaceId) {
-    return (
-      <div className="max-w-xl mx-auto py-20 text-center">
-        <h2 className="text-2xl font-semibold mb-2">No workspace selected</h2>
-        <p className="text-muted-foreground">
-          Please select a workspace to continue.
-        </p>
-      </div>
-    );
-  }
 
   useEffect(() => {
     const loadWorkspace = async () => {
@@ -75,8 +80,7 @@ const Settings = () => {
         setLoading(false);
       }
     };
-
-    loadWorkspace();
+    if (workspaceId) loadWorkspace();
   }, [workspaceId, form]);
 
   const onSubmit = async (data: WorkspaceForm) => {
@@ -85,6 +89,7 @@ const Settings = () => {
       await updateData(`/workspaces/${workspaceId}`, data);
       toast.success("Workspace updated successfully!");
       form.reset(data);
+      navigate(`/workspaces/${workspaceId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Update failed");
     } finally {
@@ -92,20 +97,47 @@ const Settings = () => {
     }
   };
 
+  const onDeleteWorkspace = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteData(`/workspaces/${workspaceId}`);
+      toast.success("Workspace deleted successfully!");
+      setShowDeleteDialog(false);
+      navigate(`/workspaces`);
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete workspace"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (!workspaceId) {
+    return (
+      <div className="max-w-xl mx-auto py-20 text-center">
+        <h2 className="text-2xl font-semibold mb-2">No workspace selected</h2>
+        <p className="text-muted-foreground">
+          Please select a workspace to continue.
+        </p>
+      </div>
+    );
+  }
+
   if (loading) return <CustomLoader />;
 
   return (
-    <main className="max-w-xl mx-auto py-8 px-4">
-      <header className="mb-6">
+    <main className="max-w-xl mx-auto py-8 px-4 space-y-10">
+      <header className="mb-6 flex items-center space-x-3">
+        <SettingsIcon className="w-7 h-7 text-teal-600" />
         <h1 className="text-3xl font-bold">Workspace Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Update the details of your workspace below.
-        </p>
       </header>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="space-y-6">
+      {/* Update Workspace Card */}
+      <div className="border rounded-lg p-6 shadow-sm bg-white">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Name Field */}
             <FormField
               control={form.control}
               name="name"
@@ -120,6 +152,7 @@ const Settings = () => {
               )}
             />
 
+            {/* Description Field */}
             <FormField
               control={form.control}
               name="description"
@@ -138,6 +171,7 @@ const Settings = () => {
               )}
             />
 
+            {/* Color Field */}
             <FormField
               control={form.control}
               name="color"
@@ -151,11 +185,18 @@ const Settings = () => {
                           key={color}
                           onClick={() => field.onChange(color)}
                           className={cn(
-                            "w-6 h-6 rounded-full cursor-pointer hover:opacity-80 transition-all duration-300",
-                            field.value === color &&
-                              "ring-2 ring-offset-2 ring-blue-500"
+                            "w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-all duration-300 border",
+                            field.value === color
+                              ? "ring-2 ring-offset-2 ring-blue-500 border-blue-500"
+                              : "border-transparent"
                           )}
                           style={{ backgroundColor: color }}
+                          aria-label={`Select color ${color}`}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && field.onChange(color)
+                          }
                         />
                       ))}
                     </div>
@@ -164,26 +205,81 @@ const Settings = () => {
                 </FormItem>
               )}
             />
-          </div>
 
-          <div className="mt-8">
+            <div className="flex justify-end mt-4">
+              <Button
+                type="submit"
+                className="bg-black text-white hover:bg-teal-600 transition-colors duration-200"
+                disabled={isSubmitting || !form.formState.isDirty}
+                aria-disabled={isSubmitting || !form.formState.isDirty}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Saving
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+
+      {/* Danger Zone Card */}
+      <div className="border rounded-lg p-6 shadow-sm bg-white">
+        <div className="flex items-center mb-4 space-x-3">
+          <AlertTriangle className="w-6 h-6 text-red-600" />
+          <h2 className="text-xl font-semibold text-red-600">Danger Zone</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          Deleting your workspace is irreversible and will remove all associated
+          projects and data. Please proceed with caution.
+        </p>
+        <Button
+          type="button"
+          variant="destructive"
+          className="w-full flex justify-center items-center gap-2 text-sm px-4 py-2 transition-colors duration-200 hover:bg-red-700"
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={isDeleting}
+          aria-disabled={isDeleting}
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete Workspace
+        </Button>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p className="mb-4">
+            Are you sure you want to delete this workspace? This action cannot
+            be undone.
+          </p>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
-              type="submit"
-              className="bg-black text-white hover:bg-teal-600 transition-colors duration-200"
-              disabled={isSubmitting}
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Saving
-                </>
-              ) : (
-                "Save Changes"
-              )}
+              Cancel
             </Button>
-          </div>
-        </form>
-      </Form>
+            <Button
+              variant="destructive"
+              onClick={onDeleteWorkspace}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };

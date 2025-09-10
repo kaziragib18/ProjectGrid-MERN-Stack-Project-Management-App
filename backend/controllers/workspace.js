@@ -1,5 +1,6 @@
 // Importing Mongoose models
 import Project from "../models/project.js";
+import Task from "../models/task.js";
 import Workspace from "../models/workspace.js";
 
 /**
@@ -344,6 +345,60 @@ const updateWorkspace = async (req, res) => {
   }
 };
 
+/**
+ * DELETE WORKSPACE
+ * - Only owner can delete the workspace
+ * - Also deletes associated projects
+ */
+const deleteWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    // Find workspace, check membership and ownership
+    const workspace = await Workspace.findOne({
+      _id: workspaceId,
+      "members.user": req.user._id,
+    });
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // Check user role: only owners allowed to delete workspace
+    const member = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!member || member.role !== "owner") {
+      return res
+        .status(403)
+        .json({ message: "Only owner can delete workspace" });
+    }
+
+    // Find all projects inside the workspace
+    const projects = await Project.find({ workspace: workspaceId });
+
+    // Get all project IDs
+    const projectIds = projects.map((p) => p._id);
+
+    // Delete all tasks related to those projects
+    await Task.deleteMany({ project: { $in: projectIds } });
+
+    // Delete all projects in this workspace
+    await Project.deleteMany({ workspace: workspaceId });
+
+    // Delete workspace itself
+    await workspace.deleteOne();
+
+    res.status(200).json({
+      message:
+        "Workspace and all related projects and tasks deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -351,4 +406,5 @@ export {
   getWorkspaceProjects,
   getWorkspaceStats,
   updateWorkspace,
+  deleteWorkspace,
 };

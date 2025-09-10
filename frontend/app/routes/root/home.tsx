@@ -1,6 +1,4 @@
 import type { FC } from "react";
-
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Link } from "react-router";
 import Features from "@/components/Features";
@@ -27,7 +25,8 @@ const Homepage: FC = () => {
           Organize. Collaborate. Deliver.
         </h1>
         <p className="text-lg md:text-xl text-teal-700 max-w-xl mb-8">
-          Your one-stop project management platform to streamline teamwork and deliver faster.
+          Your one-stop project management platform to streamline teamwork and
+          deliver faster.
         </p>
         <Link to="/sign-in">
           <button className="btn-teal-animated">Get Started</button>
@@ -46,7 +45,8 @@ const Homepage: FC = () => {
             Ready to level up your team?
           </h2>
           <p className="mb-8 text-lg max-w-xl mx-auto drop-shadow-sm">
-            Join thousands of users trusting ProjectGrid to deliver better results with ease and speed.
+            Join thousands of users trusting ProjectGrid to deliver better
+            results with ease and speed.
           </p>
           <Link to="/sign-up">
             <button type="button" className="btn-teal-animated">
