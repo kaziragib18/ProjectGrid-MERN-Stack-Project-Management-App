@@ -14,7 +14,10 @@ export const publicRoutes = [
   "*",
 ];
 
-export const getTaskStatusColor = (status: ProjectStatus) => {
+// --------------------
+// Project Status Colors
+// --------------------
+export const getProjectStatusColor = (status: ProjectStatus) => {
   switch (status) {
     case "Backlog":
       return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
@@ -37,22 +40,27 @@ export const getTaskStatusColor = (status: ProjectStatus) => {
   }
 };
 
+// --------------------
+// Task Status Colors
+// --------------------
+export const getTaskStatusColor = (status: TaskStatus) => {
+  switch (status) {
+    case "To Do":
+      return "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300";
+    case "In Progress":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+    case "Completed":
+      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+  }
+};
 
-
- //Calculates the progress of a project based on its tasks.
-
+// --------------------
+// Calculates the progress of a project based on its tasks.
+// --------------------
 export const getProjectProgress = (tasks: { status: TaskStatus }[]) => {
-  // Total number of tasks in the project
   const totalTasks = tasks.length;
-
-  // Count how many tasks have the status "Completed"
   const completedTasks = tasks.filter((task) => task?.status === "Completed").length;
-
-  // Calculate progress percentage:
-  // - If there are tasks, calculate the percentage of completed ones.
-  // - If no tasks exist, progress is 0%.
-  const progress =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  return progress;
+  return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 };

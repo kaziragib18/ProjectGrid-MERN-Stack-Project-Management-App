@@ -39,7 +39,7 @@ export default [
       // Members page
     route("members", "routes/dashboard/members.tsx"),
       // Archived tasks page
-    route("archived-tasks", "routes/dashboard/archieved.tsx"), 
+    route("archived", "routes/dashboard/archived.tsx"),
     //workspace settings page
     route(
   "workspaces/:workspaceId/settings",

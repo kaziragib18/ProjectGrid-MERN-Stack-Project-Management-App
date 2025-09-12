@@ -25,22 +25,52 @@ import {
 } from "../controllers/task.js";
 
 import authMiddleware from "../middleware/auth-middleware.js";
+import Task from "../models/task.js"; // ✅ Make sure Task model is imported
 
 const router = express.Router();
+
+// ================================
+//  Get archived tasks for a specific workspace
+// ================================
+router.get("/archived", authMiddleware, async (req, res) => {
+  try {
+    const { workspaceId } = req.query;
+
+    const query = { isArchived: true };
+
+    if (workspaceId) {
+      query["project.workspace"] = workspaceId; // filter by workspace
+    }
+
+    const tasks = await Task.find(query)
+      .populate({
+        path: "project",
+        select: "title workspace",
+      })
+      .populate("assignees", "name profilePicture email")
+      .populate("createdBy", "name profilePicture email")
+      .sort({ createdAt: -1 });
+
+    res.json({ tasks });
+  } catch (err) {
+    console.error("Error fetching archived tasks:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 // ================================
 //  Create a new task in a project
 // ================================
 router.post(
   "/:projectId/create-task",
-  authMiddleware, // Ensure user is logged in
+  authMiddleware,
   validateRequest({
     params: z.object({
-      projectId: z.string(), // Validate that projectId is a string
+      projectId: z.string(),
     }),
-    body: taskSchema, // Validate request body using the custom task schema
+    body: taskSchema,
   }),
-  createTask // Call controller to handle creation
+  createTask
 );
 
 // ================================
@@ -70,19 +100,6 @@ router.post(
 );
 
 // ================================
-//  Create comment reactions
-// ================================
-// router.post(
-//   "/:taskId/add-reactions",
-//   authMiddleware,
-//   validateRequest({
-//     params: z.object({ taskId: z.string() }),
-//     body: z.object({ text: z.string() }),
-//   }),
-//   commentReaction
-// );
-
-// ================================
 //  Create watcher
 // ================================
 router.post(
@@ -95,7 +112,7 @@ router.post(
 );
 
 // ================================
-//  Create archieve
+//  Archive/unarchive a task
 // ================================
 router.post(
   "/:taskId/archived",
@@ -107,7 +124,7 @@ router.post(
 );
 
 // ================================
-// Update a task's title
+//  Update a task's title
 // ================================
 router.put(
   "/:taskId/title",
@@ -121,9 +138,8 @@ router.put(
 );
 
 // ================================
-// Update a task's description
+//  Update a task's description
 // ================================
-
 router.put(
   "/:taskId/description",
   authMiddleware,
@@ -139,9 +155,8 @@ router.put(
 );
 
 // ================================
-// Update a task's status
+//  Update a task's status
 // ================================
-
 router.put(
   "/:taskId/status",
   authMiddleware,
@@ -157,15 +172,13 @@ router.put(
 );
 
 // ================================
-// Get tasks
+//  Get tasks assigned to the user
 // ================================
-
 router.get("/my-tasks", authMiddleware, getMyTasks);
 
 // ================================
-// Update a task's assignees
+//  Update a task's assignees
 // ================================
-
 router.put(
   "/:taskId/assignees",
   authMiddleware,
@@ -177,9 +190,8 @@ router.put(
 );
 
 // ================================
-// Update a task's proirity
+//  Update a task's priority
 // ================================
-
 router.put(
   "/:taskId/priority",
   authMiddleware,
@@ -191,21 +203,21 @@ router.put(
 );
 
 // ================================
-// Get task by ID
+//  Get task by ID
 // ================================
 router.get(
-  "/:taskId/",
+  "/:taskId",
   authMiddleware,
   validateRequest({
     params: z.object({
-      taskId: z.string(), // Validate taskId
+      taskId: z.string(),
     }),
   }),
-  getTaskById // Controller returns the task and project info
+  getTaskById
 );
 
 // ================================
-// Update sub task
+//  Update sub task
 // ================================
 router.put(
   "/:taskId/update-subtask/:subTaskId",
@@ -218,7 +230,7 @@ router.put(
 );
 
 // ================================
-// Get activity by resource Id
+//  Get activity by resource Id
 // ================================
 router.get(
   "/:resourceId/activity",
@@ -230,9 +242,8 @@ router.get(
 );
 
 // ================================
-// Get commnets by tassk Id
+//  Get comments by task Id
 // ================================
-
 router.get(
   "/:taskId/comments",
   authMiddleware,
@@ -243,7 +254,7 @@ router.get(
 );
 
 // ================================
-// Update a specific comment by ID
+//  Update a specific comment by ID
 // ================================
 router.put(
   "/:taskId/comments/:commentId",
@@ -280,9 +291,8 @@ router.put(
 );
 
 // ================================
-// Delete a specific comment by ID
+//  Delete a specific comment by ID
 // ================================
-
 router.delete(
   "/:taskId/comments/:commentId",
   authMiddleware,

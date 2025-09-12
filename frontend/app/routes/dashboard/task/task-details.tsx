@@ -82,8 +82,9 @@ const TaskDetails = () => {
     archivedTask(
       { taskId: task._id },
       {
-        onSuccess: () => toast.success("Task archived"),
-        onError: () => toast.error("Failed to archived task"),
+        onSuccess: () =>
+          toast.success(task.isArchived ? "Task unarchived" : "Task archived"),
+        onError: () => toast.error("Failed to update archive status"),
       }
     );
   };

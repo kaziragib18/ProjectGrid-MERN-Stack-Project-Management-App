@@ -14,6 +14,7 @@ import { useGetWorkspaceDetailsQuery } from "@/hooks/use-workspace";
 import type { Workspace } from "@/types";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
+import { Search } from "lucide-react";
 
 const Members = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,7 +31,6 @@ const Members = () => {
     });
 
     params.search = search;
-
     setSearchParams(params, { replace: true });
   }, [search]);
 
@@ -62,16 +62,21 @@ const Members = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start md:items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Workspace Members</h1>
-      </div>
 
-      <Input
-        placeholder="Search members..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md"
-      />
+        {/* Search Input with icon */}
+        <div className="relative max-w-md w-full md:w-auto">
+          <Input
+            placeholder="Search members..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-10"
+          />
+          <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        </div>
+      </div>
 
       <Tabs defaultValue="list">
         <TabsList>
@@ -136,9 +141,9 @@ const Members = () => {
         <TabsContent value="board">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMembers.map((member) => (
-              <Card key={member.user._id} className="">
+              <Card key={member.user._id}>
                 <CardContent className="p-6 flex flex-col items-center text-center">
-                  <Avatar className="bg-gray-500 size-20 mb-4">
+                  <Avatar className="bg-gray-500 mb-4">
                     <AvatarImage src={member.user.profilePicture} />
                     <AvatarFallback className="uppercase">
                       {member.user.name.substring(0, 2)}

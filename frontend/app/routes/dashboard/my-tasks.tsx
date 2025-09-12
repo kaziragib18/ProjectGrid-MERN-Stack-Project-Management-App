@@ -21,7 +21,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetMyTasksQuery } from "@/hooks/use-task";
 import type { Task } from "@/types";
 import { format } from "date-fns";
-import { ArrowUpRight, CheckCircle, Clock, FilterIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  CheckCircle,
+  Clock,
+  FilterIcon,
+  Search,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
@@ -56,20 +62,14 @@ const getStatusBadgeProps = (status: string) => {
 const getPriorityBadgeProps = (priority: string) => {
   switch (priority) {
     case "High":
-      return {
-        variant: "destructive" as const,
-        className: "",
-      };
+      return { variant: "destructive" as const, className: "" };
     case "Low":
       return {
         variant: "default" as const,
         className: "bg-blue-100 text-blue-800",
       };
     default:
-      return {
-        variant: "secondary" as const,
-        className: "",
-      };
+      return { variant: "secondary" as const, className: "" };
   }
 };
 
@@ -109,11 +109,9 @@ const MyTasks = () => {
   useEffect(() => {
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => (params[key] = value));
-
     params.filter = filter;
     params.sort = sortDirection;
     params.search = search;
-
     setSearchParams(params, { replace: true });
     setCurrentPage(1); // reset to first page on filter/sort/search change
   }, [filter, sortDirection, search]);
@@ -123,7 +121,6 @@ const MyTasks = () => {
     const urlFilter = searchParams.get("filter") || "all";
     const urlSort = searchParams.get("sort") || "desc";
     const urlSearch = searchParams.get("search") || "";
-
     if (urlFilter !== filter) setFilter(urlFilter);
     if (urlSort !== sortDirection)
       setSortDirection(urlSort === "asc" ? "asc" : "desc");
@@ -229,13 +226,16 @@ const MyTasks = () => {
         </div>
       </div>
 
-      {/* Search input */}
-      <Input
-        placeholder="Search tasks..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md"
-      />
+      {/* Search input with search icon */}
+      <div className="relative w-full max-w-md">
+        <Input
+          placeholder="Search tasks..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pr-10"
+        />
+        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      </div>
 
       {/* Tabs for List View and Board View */}
       <Tabs defaultValue="list">
@@ -260,6 +260,7 @@ const MyTasks = () => {
                   const priorityBadge = task.priority
                     ? getPriorityBadgeProps(task.priority)
                     : null;
+
                   return (
                     <div
                       key={task._id}
