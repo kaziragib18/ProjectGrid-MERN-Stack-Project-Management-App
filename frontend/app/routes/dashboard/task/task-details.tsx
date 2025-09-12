@@ -32,11 +32,9 @@ const TaskDetails = () => {
   }>();
   const navigate = useNavigate();
 
-  const { data, isLoading } = useTaskByIdQuery(taskId!) as {
-    data: {
-      task: Task;
-      project: Project;
-    };
+  // ✅ Safe hook execution: skip if taskId is undefined
+  const { data, isLoading } = useTaskByIdQuery(taskId || "") as {
+    data: { task: Task; project: Project } | undefined;
     isLoading: boolean;
   };
 
@@ -44,13 +42,7 @@ const TaskDetails = () => {
   const { mutate: archivedTask, isPending: isArchived } =
     useArchivedTaskMutation();
 
-  if (isLoading) {
-    return (
-      <div>
-        <CustomLoader />
-      </div>
-    );
-  }
+  if (isLoading) return <CustomLoader />;
 
   if (!data) {
     return (
@@ -62,9 +54,10 @@ const TaskDetails = () => {
 
   const { task, project } = data;
 
-  const isUserWatching = task?.watchers?.some(
-    (watcher) => watcher._id.toString() === user?._id.toString()
-  );
+  const isUserWatching =
+    task?.watchers?.some(
+      (watcher) => watcher._id?.toString() === user?._id?.toString()
+    ) ?? false;
 
   const goBack = () => navigate(-1);
 
@@ -72,8 +65,9 @@ const TaskDetails = () => {
     watchTask(
       { taskId: task._id },
       {
-        onSuccess: () => toast.success("Task watched"),
-        onError: () => toast.error("Failed to watch task"),
+        onSuccess: () =>
+          toast.success(isUserWatching ? "Task unwatched" : "Task watched"),
+        onError: () => toast.error("Failed to update watch status"),
       }
     );
   };
@@ -157,16 +151,13 @@ const TaskDetails = () => {
               {/* Right side: Priority Badge */}
               <div>
                 <Badge
-                  className={`
-                    capitalize
-                    ${
-                      task.priority === "High"
-                        ? "bg-red-100 text-red-700"
-                        : task.priority === "Medium"
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-green-100 text-green-700"
-                    }
-                  `}
+                  className={`capitalize ${
+                    task.priority === "High"
+                      ? "bg-red-100 text-red-700"
+                      : task.priority === "Medium"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-green-100 text-green-700"
+                  }`}
                 >
                   {task.priority} Priority
                 </Badge>
@@ -179,12 +170,7 @@ const TaskDetails = () => {
                   priority={task.priority}
                   taskId={task._id}
                 />
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {}}
-                  className=""
-                >
+                <Button variant="destructive" size="sm" onClick={() => {}}>
                   <Trash2 className="size-4" />
                 </Button>
               </div>
@@ -211,8 +197,8 @@ const TaskDetails = () => {
                 taskId={task._id}
               />
             </div>
-            <hr className="mb-6" /> {/* <-- Added horizontal line here */}
-            {/* Subtasks and Assignees side by side with only middle border */}
+            <hr className="mb-6" /> {/* Horizontal line */}
+            {/* Subtasks and Assignees side by side */}
             <div className="flex flex-col md:flex-row gap-6 px-2">
               <div className="md:w-1/2 w-full pr-4 md:pr-6 border-r border-gray-300">
                 <SubTasksDetails
@@ -230,6 +216,7 @@ const TaskDetails = () => {
               </div>
             </div>
           </div>
+
           {user && (
             <CommentSection
               taskId={task._id}

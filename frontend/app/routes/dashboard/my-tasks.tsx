@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetMyTasksQuery } from "@/hooks/use-task";
 import type { Task } from "@/types";
 import { format } from "date-fns";
@@ -27,13 +27,12 @@ import {
   Clock,
   FilterIcon,
   Search,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
-/**
- * Returns badge props (variant & className) for task status with modern colors
- */
+/** Badge helpers */
 const getStatusBadgeProps = (status: string) => {
   switch (status) {
     case "Completed":
@@ -56,9 +55,6 @@ const getStatusBadgeProps = (status: string) => {
   }
 };
 
-/**
- * Returns badge props for priority with modern colors
- */
 const getPriorityBadgeProps = (priority: string) => {
   switch (priority) {
     case "High":
@@ -73,76 +69,89 @@ const getPriorityBadgeProps = (priority: string) => {
   }
 };
 
-// Mapping of filter keys to user-friendly labels
-const FILTER_LABELS: Record<string, string> = {
-  all: "All Tasks",
+// Filter options
+const STATUS_FILTERS: Record<string, string> = {
+  all: "All Status",
   todo: "To Do",
   inprogress: "In Progress",
   completed: "Completed",
   archieved: "Archived",
-  high: "High Priority",
+};
+
+const PRIORITY_FILTERS: Record<string, string> = {
+  all: "All Priorities",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
 };
 
 const TASKS_PER_PAGE = 7;
 
-/**
- * Main component to display and manage "My Tasks"
- */
 const MyTasks = () => {
-  // URL params and initial filter/sort/search state
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialFilter = searchParams.get("filter") || "all";
+  const initialStatusFilter = searchParams.get("status") || "all";
+  const initialPriorityFilter = searchParams.get("priority") || "all";
   const initialSort = searchParams.get("sort") || "desc";
   const initialSearch = searchParams.get("search") || "";
 
-  // Local UI state
-  const [filter, setFilter] = useState<string>(initialFilter);
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter);
+  const [priorityFilter, setPriorityFilter] = useState<string>(
+    initialPriorityFilter
+  );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
     initialSort === "asc" ? "asc" : "desc"
   );
   const [search, setSearch] = useState<string>(initialSearch);
-
-  // Pagination state (page starts at 1)
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [tab, setTab] = useState<"list" | "board">("list");
 
-  // Update URL params when filter/sort/search changes
+  /** Update URL params on filter/sort/search change */
   useEffect(() => {
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => (params[key] = value));
-    params.filter = filter;
+    params.status = statusFilter;
+    params.priority = priorityFilter;
     params.sort = sortDirection;
     params.search = search;
     setSearchParams(params, { replace: true });
-    setCurrentPage(1); // reset to first page on filter/sort/search change
-  }, [filter, sortDirection, search]);
+    setCurrentPage(1);
+  }, [statusFilter, priorityFilter, sortDirection, search]);
 
-  // Sync state if URL params change externally
+  /** Sync URL changes */
   useEffect(() => {
-    const urlFilter = searchParams.get("filter") || "all";
+    const urlStatus = searchParams.get("status") || "all";
+    const urlPriority = searchParams.get("priority") || "all";
     const urlSort = searchParams.get("sort") || "desc";
     const urlSearch = searchParams.get("search") || "";
-    if (urlFilter !== filter) setFilter(urlFilter);
+    if (urlStatus !== statusFilter) setStatusFilter(urlStatus);
+    if (urlPriority !== priorityFilter) setPriorityFilter(urlPriority);
     if (urlSort !== sortDirection)
       setSortDirection(urlSort === "asc" ? "asc" : "desc");
     if (urlSearch !== search) setSearch(urlSearch);
   }, [searchParams]);
 
-  // Fetch tasks assigned to user
   const { data: myTasks, isLoading } = useGetMyTasksQuery() as {
     data: Task[];
     isLoading: boolean;
   };
 
-  // Filter tasks by status and search term
+  /** Apply filters */
   const filteredTasks = myTasks?.length
     ? myTasks
         .filter((task) => {
-          if (filter === "all") return true;
-          if (filter === "todo") return task.status === "To Do";
-          if (filter === "inprogress") return task.status === "In Progress";
-          if (filter === "completed") return task.status === "Completed";
-          if (filter === "archieved") return task.isArchived === true;
-          if (filter === "high") return task.priority === "High";
+          if (statusFilter === "all") return true;
+          if (statusFilter === "todo") return task.status === "To Do";
+          if (statusFilter === "inprogress")
+            return task.status === "In Progress";
+          if (statusFilter === "completed") return task.status === "Completed";
+          if (statusFilter === "archieved") return task.isArchived === true;
+          return true;
+        })
+        .filter((task) => {
+          if (priorityFilter === "all") return true;
+          if (priorityFilter === "high") return task.priority === "High";
+          if (priorityFilter === "medium") return task.priority === "Medium";
+          if (priorityFilter === "low") return task.priority === "Low";
           return true;
         })
         .filter((task) =>
@@ -154,7 +163,7 @@ const MyTasks = () => {
         )
     : [];
 
-  // Sort tasks by due date
+  /** Sort */
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (a.dueDate && b.dueDate) {
       return sortDirection === "asc"
@@ -164,14 +173,12 @@ const MyTasks = () => {
     return 0;
   });
 
-  // Pagination calculations
   const totalPages = Math.ceil(sortedTasks.length / TASKS_PER_PAGE);
   const paginatedTasks = sortedTasks.slice(
     (currentPage - 1) * TASKS_PER_PAGE,
     currentPage * TASKS_PER_PAGE
   );
 
-  // Divide tasks by status (for board view)
   const todoTasks = sortedTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = sortedTasks.filter(
     (task) => task.status === "In Progress"
@@ -180,18 +187,91 @@ const MyTasks = () => {
     (task) => task.status === "Completed"
   );
 
-  // Loading state
   if (isLoading) return <CustomLoader />;
+
+  /** Clear filters */
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setPriorityFilter("all");
+    setSearch("");
+    setSortDirection("desc");
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with toggle, search, filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">My Tasks</h1>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 w-full md:w-auto">
+          {/* View toggle */}
+          <Tabs
+            value={tab}
+            onValueChange={(value) => setTab(value as "list" | "board")}
+          >
+            <TabsList>
+              <TabsTrigger value="list">List View</TabsTrigger>
+              <TabsTrigger value="board">Board View</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        {/* Sorting and filtering */}
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-          {/* Sort button toggles ascending/descending */}
+          {/* Search */}
+          <div className="relative w-full md:w-80">
+            <Input
+              placeholder="Search tasks..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pr-10 py-2"
+            />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+
+          {/* Status filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center">
+                <FilterIcon className="w-4 h-4 mr-1" />
+                {STATUS_FILTERS[statusFilter]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {Object.entries(STATUS_FILTERS).map(([key, label]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                  className={key === statusFilter ? "font-semibold" : ""}
+                >
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Priority filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center">
+                <FilterIcon className="w-4 h-4 mr-1" />
+                {PRIORITY_FILTERS[priorityFilter]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Priority Filter</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {Object.entries(PRIORITY_FILTERS).map(([key, label]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setPriorityFilter(key)}
+                  className={key === priorityFilter ? "font-semibold" : ""}
+                >
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Sort button */}
           <Button
             variant="outline"
             onClick={() =>
@@ -201,88 +281,161 @@ const MyTasks = () => {
             {sortDirection === "asc" ? "Oldest First" : "Newest First"}
           </Button>
 
-          {/* Filter dropdown shows current filter in button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <FilterIcon className="w-4 h-4 mr-1" />
-                {FILTER_LABELS[filter] || "Filter"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>Filter Tasks</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {Object.entries(FILTER_LABELS).map(([key, label]) => (
-                <DropdownMenuItem
-                  key={key}
-                  onClick={() => setFilter(key)}
-                  className={key === filter ? "font-semibold" : ""}
-                >
-                  {label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Clear filters */}
+          <Button
+            variant="secondary"
+            onClick={clearFilters}
+            className="flex items-center gap-1"
+          >
+            <X className="w-4 h-4" />
+            Clear Filters
+          </Button>
         </div>
       </div>
 
-      {/* Search input with search icon */}
-      <div className="relative w-full max-w-md">
-        <Input
-          placeholder="Search tasks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pr-10"
-        />
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-      </div>
-
-      {/* Tabs for List View and Board View */}
-      <Tabs defaultValue="list">
-        <TabsList>
-          <TabsTrigger value="list">List View</TabsTrigger>
-          <TabsTrigger value="board">Board View</TabsTrigger>
-        </TabsList>
-
-        {/* === LIST VIEW with Pagination === */}
-        <TabsContent value="list">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Tasks</CardTitle>
-              <CardDescription>
-                {sortedTasks.length} tasks assigned to you
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y">
-                {paginatedTasks.map((task) => {
-                  const statusBadge = getStatusBadgeProps(task.status);
-                  const priorityBadge = task.priority
-                    ? getPriorityBadgeProps(task.priority)
-                    : null;
-
-                  return (
-                    <div
-                      key={task._id}
-                      className="p-4 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        {/* Left: status icon, title, badges */}
-                        <div className="flex items-start gap-3">
-                          {task.status === "Completed" ? (
-                            <CheckCircle className="size-5 text-green-500 mt-1" />
-                          ) : (
-                            <Clock className="size-5 text-yellow-500 mt-1" />
-                          )}
-                          <div>
-                            <Link
-                              to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                              className="font-medium hover:text-primary hover:underline flex items-center"
+      {/* === LIST VIEW === */}
+      {tab === "list" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>My Tasks</CardTitle>
+            <CardDescription>
+              {sortedTasks.length} tasks assigned to you
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y">
+              {paginatedTasks.map((task) => {
+                const statusBadge = getStatusBadgeProps(task.status);
+                const priorityBadge = task.priority
+                  ? getPriorityBadgeProps(task.priority)
+                  : null;
+                return (
+                  <div
+                    key={task._id}
+                    className="p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        {task.status === "Completed" ? (
+                          <CheckCircle className="size-5 text-green-500 mt-1" />
+                        ) : (
+                          <Clock className="size-5 text-yellow-500 mt-1" />
+                        )}
+                        <div>
+                          <Link
+                            to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
+                            className="font-medium hover:text-primary hover:underline flex items-center"
+                          >
+                            {task.title}
+                            <ArrowUpRight className="size-4 ml-1" />
+                          </Link>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <Badge
+                              variant={statusBadge.variant}
+                              className={statusBadge.className}
                             >
-                              {task.title}
-                              <ArrowUpRight className="size-4 ml-1" />
-                            </Link>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              {task.status}
+                            </Badge>
+                            {priorityBadge && (
+                              <Badge
+                                variant={priorityBadge.variant}
+                                className={priorityBadge.className}
+                              >
+                                {task.priority}
+                              </Badge>
+                            )}
+                            {task.isArchived && (
+                              <Badge variant="outline">Archived</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        {task.dueDate && (
+                          <div>Due: {format(task.dueDate, "PPPP")}</div>
+                        )}
+                        <div>
+                          Project:{" "}
+                          <span className="font-medium">
+                            {task.project.title}
+                          </span>
+                        </div>
+                        <div>Updated: {format(task.updatedAt, "PPPP")}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {sortedTasks.length === 0 && (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No tasks found.
+                </div>
+              )}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center space-x-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-3">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* === BOARD VIEW === */}
+      {tab === "board" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { title: "To Do", tasks: todoTasks },
+            { title: "In Progress", tasks: inProgressTasks },
+            { title: "Completed", tasks: completedTasks },
+          ].map(({ title, tasks }) => (
+            <div key={title} className="mb-4">
+              <Card className="flex flex-col">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    {title}
+                    <Badge variant="outline">{tasks.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 py-3">
+                  {tasks.map((task) => {
+                    const priorityBadge = task.priority
+                      ? getPriorityBadgeProps(task.priority)
+                      : null;
+                    const statusBadge = getStatusBadgeProps(task.status);
+                    return (
+                      <Card
+                        key={task._id}
+                        className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow mb-4"
+                      >
+                        <Link
+                          to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
+                          className="block"
+                        >
+                          <div className="flex flex-col space-y-2">
+                            <h3 className="font-semibold">{task.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-3">
+                              {task.description || "No description"}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
                               <Badge
                                 variant={statusBadge.variant}
                                 className={statusBadge.className}
@@ -301,107 +454,10 @@ const MyTasks = () => {
                                 <Badge variant="outline">Archived</Badge>
                               )}
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Right: due date, project, updated */}
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          {task.dueDate && (
-                            <div>Due: {format(task.dueDate, "PPPP")}</div>
-                          )}
-                          <div>
-                            Project:{" "}
-                            <span className="font-medium">
-                              {task.project.title}
-                            </span>
-                          </div>
-                          <div>Updated: {format(task.updatedAt, "PPPP")}</div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {sortedTasks.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No tasks found.
-                  </div>
-                )}
-              </div>
-
-              {/* Pagination controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-3">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* === BOARD VIEW === */}
-        <TabsContent value="board">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { title: "To Do", tasks: todoTasks },
-              { title: "In Progress", tasks: inProgressTasks },
-              { title: "Completed", tasks: completedTasks },
-            ].map(({ title, tasks }) => (
-              <Card key={title} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    {title}
-                    <Badge variant="outline">{tasks.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-3 space-y-4 max-h-[600px] overflow-y-auto">
-                  {tasks.map((task) => {
-                    const priorityBadge = task.priority
-                      ? getPriorityBadgeProps(task.priority)
-                      : null;
-                    return (
-                      <Card
-                        key={task._id}
-                        className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <Link
-                          to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                          className="block space-y-2"
-                        >
-                          <h3 className="font-semibold">{task.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-3">
-                            {task.description || "No description"}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2">
-                            {priorityBadge && (
-                              <Badge
-                                variant={priorityBadge.variant}
-                                className={priorityBadge.className}
-                              >
-                                {task.priority}
-                              </Badge>
-                            )}
                             {task.dueDate && (
-                              <span className="text-xs text-muted-foreground">
-                                {format(task.dueDate, "PPPP")}
-                              </span>
+                              <div className="text-xs text-muted-foreground">
+                                Due: {format(task.dueDate, "PPPP")}
+                              </div>
                             )}
                           </div>
                         </Link>
@@ -415,10 +471,10 @@ const MyTasks = () => {
                   )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

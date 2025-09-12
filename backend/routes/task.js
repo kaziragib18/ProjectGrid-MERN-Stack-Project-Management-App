@@ -25,7 +25,7 @@ import {
 } from "../controllers/task.js";
 
 import authMiddleware from "../middleware/auth-middleware.js";
-import Task from "../models/task.js"; // ✅ Make sure Task model is imported
+import Task from "../models/task.js"; // ✅ Task model
 
 const router = express.Router();
 
@@ -36,13 +36,8 @@ router.get("/archived", authMiddleware, async (req, res) => {
   try {
     const { workspaceId } = req.query;
 
-    const query = { isArchived: true };
-
-    if (workspaceId) {
-      query["project.workspace"] = workspaceId; // filter by workspace
-    }
-
-    const tasks = await Task.find(query)
+    // Fetch all archived tasks
+    let tasks = await Task.find({ isArchived: true })
       .populate({
         path: "project",
         select: "title workspace",
@@ -50,6 +45,13 @@ router.get("/archived", authMiddleware, async (req, res) => {
       .populate("assignees", "name profilePicture email")
       .populate("createdBy", "name profilePicture email")
       .sort({ createdAt: -1 });
+
+    // Filter tasks by workspaceId if provided
+    if (workspaceId) {
+      tasks = tasks.filter(
+        (t) => t.project && t.project.workspace.toString() === workspaceId
+      );
+    }
 
     res.json({ tasks });
   } catch (err) {
