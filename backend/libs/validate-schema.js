@@ -49,8 +49,18 @@ const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 
+// Schema for validating workspace invite via email
 const emailSchema = z.object({
-  email,
+  email: z.string().email("Invalid email address"),
+});
+
+const inviteMemberSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["admin", "member", "viewer"]),
+});
+
+const tokenSchema = z.object({
+  token: z.string().min(1, "Token is required"),
 });
 
 // Schema for validating workspace creation
@@ -141,4 +151,6 @@ export {
   projectSchema,
   taskSchema,
   updateWorkspaceSchema,
+  inviteMemberSchema,
+  tokenSchema,
 };

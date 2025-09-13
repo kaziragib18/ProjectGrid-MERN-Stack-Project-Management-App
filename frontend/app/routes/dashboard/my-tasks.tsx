@@ -21,16 +21,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetMyTasksQuery } from "@/hooks/use-task";
 import type { Task } from "@/types";
 import { format } from "date-fns";
-import {
-  ArrowUpRight,
-  CheckCircle,
-  Clock,
-  FilterIcon,
-  Search,
-  X,
-} from "lucide-react";
+import { CheckCircle, Clock, FilterIcon, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 /** Badge helpers */
 const getStatusBadgeProps = (status: string) => {
@@ -85,10 +78,12 @@ const PRIORITY_FILTERS: Record<string, string> = {
   low: "Low",
 };
 
-const TASKS_PER_PAGE = 7;
+const TASKS_PER_PAGE = 6;
 
 const MyTasks = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const initialStatusFilter = searchParams.get("status") || "all";
   const initialPriorityFilter = searchParams.get("priority") || "all";
   const initialSort = searchParams.get("sort") || "desc";
@@ -195,6 +190,13 @@ const MyTasks = () => {
     setPriorityFilter("all");
     setSearch("");
     setSortDirection("desc");
+  };
+
+  /** Navigate to task */
+  const goToTask = (task: Task) => {
+    navigate(
+      `/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`
+    );
   };
 
   return (
@@ -312,9 +314,11 @@ const MyTasks = () => {
                 return (
                   <div
                     key={task._id}
-                    className="p-4 hover:bg-muted/50 transition-colors"
+                    onClick={() => goToTask(task)}
+                    className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      {/* Left: icon + title + badges */}
                       <div className="flex items-start gap-3">
                         {task.status === "Completed" ? (
                           <CheckCircle className="size-5 text-green-500 mt-1" />
@@ -322,14 +326,13 @@ const MyTasks = () => {
                           <Clock className="size-5 text-yellow-500 mt-1" />
                         )}
                         <div>
-                          <Link
-                            to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                            className="font-medium hover:text-primary hover:underline flex items-center"
-                          >
+                          {/* Task title */}
+                          <div className="font-medium hover:text-primary">
                             {task.title}
-                            <ArrowUpRight className="size-4 ml-1" />
-                          </Link>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                          </div>
+
+                          {/* Status / Priority / Archived badges */}
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
                             <Badge
                               variant={statusBadge.variant}
                               className={statusBadge.className}
@@ -350,9 +353,11 @@ const MyTasks = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground space-y-1">
+
+                      {/* Right: metadata */}
+                      <div className="text-sm text-muted-foreground space-y-1 text-right md:text-left">
                         {task.dueDate && (
-                          <div>Due: {format(task.dueDate, "PPPP")}</div>
+                          <div>Created: {format(task.createdAt, "PPPP")}</div>
                         )}
                         <div>
                           Project:{" "}
@@ -360,7 +365,9 @@ const MyTasks = () => {
                             {task.project.title}
                           </span>
                         </div>
-                        <div>Updated: {format(task.updatedAt, "PPPP")}</div>
+                        <div className="text-amber-600">
+                          Due: {format(task.dueDate, "PPPP")}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -424,43 +431,39 @@ const MyTasks = () => {
                     return (
                       <Card
                         key={task._id}
-                        className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow mb-4"
+                        className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow mb-4 cursor-pointer"
+                        onClick={() => goToTask(task)}
                       >
-                        <Link
-                          to={`/workspaces/${task.project.workspace}/projects/${task.project._id}/tasks/${task._id}`}
-                          className="block"
-                        >
-                          <div className="flex flex-col space-y-2">
-                            <h3 className="font-semibold">{task.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-3">
-                              {task.description || "No description"}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-col space-y-2">
+                          <h3 className="font-medium">{task.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-3">
+                            {task.description || "No description"}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge
+                              variant={statusBadge.variant}
+                              className={statusBadge.className}
+                            >
+                              {task.status}
+                            </Badge>
+                            {priorityBadge && (
                               <Badge
-                                variant={statusBadge.variant}
-                                className={statusBadge.className}
+                                variant={priorityBadge.variant}
+                                className={priorityBadge.className}
                               >
-                                {task.status}
+                                {task.priority}
                               </Badge>
-                              {priorityBadge && (
-                                <Badge
-                                  variant={priorityBadge.variant}
-                                  className={priorityBadge.className}
-                                >
-                                  {task.priority}
-                                </Badge>
-                              )}
-                              {task.isArchived && (
-                                <Badge variant="outline">Archived</Badge>
-                              )}
-                            </div>
-                            {task.dueDate && (
-                              <div className="text-xs text-muted-foreground">
-                                Due: {format(task.dueDate, "PPPP")}
-                              </div>
+                            )}
+                            {task.isArchived && (
+                              <Badge variant="outline">Archived</Badge>
                             )}
                           </div>
-                        </Link>
+                          {task.dueDate && (
+                            <div className="text-xs text-muted-foreground">
+                              Due: {format(task.dueDate, "PPPP")}
+                            </div>
+                          )}
+                        </div>
                       </Card>
                     );
                   })}

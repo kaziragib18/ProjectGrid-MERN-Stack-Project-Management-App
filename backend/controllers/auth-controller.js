@@ -1,3 +1,4 @@
+// Importing Mongoose models
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import { sendEmail } from "../libs/send-email.js";
@@ -5,40 +6,100 @@ import aj from "../libs/arcjet.js";
 import Verification from "../models/verification.js";
 import jwt from "jsonwebtoken";
 
+// --- Modern Email Templates ---
+// Email verification template
+const getVerificationEmailTemplate = (verificationLink, name) => `
+  <div style="font-family: Arial, sans-serif; background-color:#f9fafb; padding:30px;">
+    <div style="max-width:600px; margin:auto; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:40px; text-align:center;">
+  
+      <h2 style="color:#0d9488; margin-bottom:12px;">Verify Your Email</h2>
+      <p style="color:#4b5563; font-size:16px; margin-bottom:24px;">
+        Hi <b>${name}</b>,<br>
+        Thanks for joining ProjectGrid! Please confirm your email address to activate your account.
+      </p>
+
+      <!-- CTA Button -->
+      <a href="${verificationLink}" 
+        style="display:inline-block; background:#0d9488; color:white; text-decoration:none; padding:14px 28px; border-radius:8px; font-weight:600;"
+        onmouseover="this.style.background='#0f766e';"
+        onmouseout="this.style.background='#0d9488';">
+        Verify Email
+      </a>
+      
+      <p style="color:#6b7280; font-size:13px; margin-top:20px;">
+        If the button above doesn't work, copy and paste this link into your browser:<br>
+        <span style="color:#0d9488;">${verificationLink}</span>
+      </p>
+
+      <hr style="margin:30px 0; border:none; border-top:1px solid #e5e7eb;">
+      <p style="color:#9ca3af; font-size:12px;">This link will expire in 1 hour.</p>
+    </div>
+  </div>
+`;
+
+// Password reset template
+const getResetPasswordEmailTemplate = (resetPasswordLink, name) => `
+  <div style="font-family: Arial, sans-serif; background-color:#f9fafb; padding:30px;">
+    <div style="max-width:600px; margin:auto; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:40px; text-align:center;">
+      <h2 style="color:#0d9488; margin-bottom:12px;">Reset Your Password</h2>
+      <p style="color:#4b5563; font-size:16px; margin-bottom:24px;">
+        Hi <b>${name}</b>,<br>
+        You requested to reset your password. Click below to set up a new one.
+      </p>
+
+      <!-- CTA Button -->
+      <a href="${resetPasswordLink}" 
+        style="display:inline-block; background:#0d9488; color:white; text-decoration:none; padding:14px 28px; border-radius:8px; font-weight:600;"
+        onmouseover="this.style.background='#0f766e';"
+        onmouseout="this.style.background='#0d9488';">
+        Reset Password
+      </a>
+      
+      <p style="color:#6b7280; font-size:13px; margin-top:20px;">
+        If the button above doesn't work, copy and paste this link into your browser:<br>
+        <span style="color:#0d9488;">${resetPasswordLink}</span>
+      </p>
+
+      <hr style="margin:30px 0; border:none; border-top:1px solid #e5e7eb;">
+      <p style="color:#9ca3af; font-size:12px;">This link will expire in 10 minutes. If you didn’t request this, please ignore this email.</p>
+    </div>
+  </div>
+`;
+
+// --- Register User ---
 const registerUser = async (req, res) => {
   try {
     // Extract user data from the request body
     const { name, email, password } = req.body;
 
-    // Validate the request body using Zod schema
-    // Initialize Arcjet for bot protection
+    // Validate request body using Arcjet bot protection
     const decision = await aj.protect(req, { email });
     console.log("Arcjet decision", decision.isDenied());
 
     if (decision.isDenied()) {
-      return res.status(403).json({ message: "Invalid email address" }); // Use return to stop further execution
+      return res.status(403).json({ message: "Invalid email address" });
     }
 
-    // Here you would typically check if the user already exists in the database
+    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({
         message: "User already exists with this email",
       });
 
-    // Hash the password before saving it to the database
-    const salt = await bcrypt.genSalt(10); // Generate a salt for hashing
-    const hashPassword = await bcrypt.hash(password, salt); // Hash the password
+    // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user in the database
+    // Create user
     const newUser = await User.create({
       email,
-      password: hashPassword, // Save the hashed password
+      password: hashPassword,
       name,
-      isEmailVerified: false, // Making sure your User schema supports this field
+      isEmailVerified: false,
     });
 
-    // Create a verification token for the email verification
+    // Create verification token
     const verificationToken = jwt.sign(
       {
         userId: newUser._id,
@@ -50,18 +111,17 @@ const registerUser = async (req, res) => {
     );
 
     await Verification.create({
-      userId: newUser._id, // Reference to the user
-      token: verificationToken, // The verification token
-      expiresAt: new Date(Date.now() + 3600000), // Set expiration time for the token (1 hour)
+      userId: newUser._id,
+      token: verificationToken,
+      expiresAt: new Date(Date.now() + 3600000),
     });
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    //send the verification email to the user
-    const emailBody = `<p>Click the link below to verify your email address:</p>
-    <a href="${verificationLink}">Verify Email</a>`;
-    const emailSubject = "Email Verification for ProjectGrid";
 
-    // Call the sendEmail function to send the verification email
+    // Send styled email
+    const emailBody = getVerificationEmailTemplate(verificationLink, name);
+    const emailSubject = "Verify Your Email - ProjectGrid";
+
     const isEmailSent = await sendEmail(email, emailSubject, emailBody);
     if (!isEmailSent) {
       return res.status(500).json({
@@ -69,14 +129,12 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Send success response after email is sent successfully
     return res.status(201).json({
       message:
-        "A verification email has been sent to your email address. Please verify your email to complete the registration process.",
-      user: { name, email }, // Return the user data (excluding password)
+        "A verification email has been sent. Please verify your email to complete registration.",
+      user: { name, email },
     });
   } catch (error) {
-    // Error handling
     res.status(500).json({
       message: "Error registering user",
       error: error.message,
@@ -84,12 +142,12 @@ const registerUser = async (req, res) => {
   }
 };
 
-
+// --- Login User ---
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    //
-    const user = await User.findOne({ email }).select("+password"); // Include password in the query to compare it with the user model as it is set to select: false
+
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
@@ -103,7 +161,7 @@ const loginUser = async (req, res) => {
       if (existingVerification && existingVerification.expiresAt > new Date()) {
         return res.status(400).json({
           message:
-            "Please verify your email before logging in. A verification email has already been sent to your email address.",
+            "Please verify your email before logging in. A verification email has already been sent.",
         });
       } else {
         await Verification.findByIdAndDelete(existingVerification._id);
@@ -117,16 +175,17 @@ const loginUser = async (req, res) => {
         await Verification.create({
           userId: user._id,
           token: verificationToken,
-          expiresAt: new Date(Date.now() + 3600000), // Set expiration time for the token (1 hour)
+          expiresAt: new Date(Date.now() + 3600000),
         });
 
-        // Send verification email
         const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-        const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`;
-        const emailSubject = "Verify your email";
+        const emailBody = getVerificationEmailTemplate(
+          verificationLink,
+          user.name
+        );
+        const emailSubject = "Verify Your Email - ProjectGrid";
 
         const isEmailSent = await sendEmail(email, emailSubject, emailBody);
-
         if (!isEmailSent) {
           return res.status(500).json({
             message: "Failed to send verification email",
@@ -134,30 +193,26 @@ const loginUser = async (req, res) => {
         }
 
         res.status(201).json({
-          message:
-            "Verification email sent to your email. Please check and verify your account.",
+          message: "Verification email sent. Please check your inbox.",
         });
       }
     }
-    // Check if the password is valid
-    // If the password is valid, generate a JWT token for the user
+
+    // Validate password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
-    // Generate JWT token for the user
-    // The token will be used for authentication in subsequent requests
+
     const token = jwt.sign(
       { userId: user._id, purpose: "login" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    // Update the last login time
+
     user.lastLogin = new Date();
     await user.save();
 
-    // Return the token and user data (excluding password) in the response
-    // This is important to avoid sending sensitive information like password in the response
     const userData = user.toObject();
     delete userData.password;
 
@@ -168,12 +223,11 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
+// --- Verify Email ---
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.body;
@@ -182,7 +236,6 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "Token is required" });
     }
 
-    // Verify the token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -211,7 +264,7 @@ const verifyEmail = async (req, res) => {
         message: "Verification token has expired",
       });
     }
-    // Check if the purpose of the token is email verification
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -223,15 +276,14 @@ const verifyEmail = async (req, res) => {
         message: "Email is already verified",
       });
     }
-    user.isEmailVerified = true; // Set email as verified
-    await user.save(); // Save the updated user document
 
-    // Delete the verification document after successful verification
+    user.isEmailVerified = true;
+    await user.save();
     await Verification.findByIdAndDelete(verification._id);
 
     return res.status(200).json({
       message: "Email verified successfully",
-      user: { name: user.name, email: user.email }, // Return the user data (excluding password)
+      user: { name: user.name, email: user.email },
     });
   } catch (error) {
     return res.status(500).json({
@@ -241,70 +293,68 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-// Function to handle password reset request
-// This function will generate a reset token and send it to the user's email
-// The user can then use this token to reset their password
-
+// --- Reset Password Request ---
 const resetPasswordRequest = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: "User not found"
+        message: "User not found",
       });
     }
     if (!user.isEmailVerified) {
       return res.status(400).json({
-        message: "Email is not verified. Please verify your email before resetting the password."
+        message:
+          "Email is not verified. Please verify your email before resetting the password.",
       });
     }
+
     const existingVerification = await Verification.findOne({
       userId: user._id,
     });
-   
-    // This prevents multiple reset requests from being sent to the user's email
+
     if (existingVerification && existingVerification.expiresAt > new Date()) {
       return res.status(400).json({
-        message: "A password reset request is already in progress. Please check your email for the reset link."
+        message:
+          "A password reset request is already in progress. Please check your email.",
       });
     }
-    // If an existing verification document is found and it has expired, delete it
-    // This ensures that expired verification documents do not clutter the database
-    if( existingVerification && existingVerification.expiresAt < new Date()) {
+
+    if (existingVerification && existingVerification.expiresAt < new Date()) {
       await Verification.findByIdAndDelete(existingVerification._id);
       console.log("Deleted expired verification document");
     }
-    // Generate a reset token for the password reset request
-    // This token will be used to verify the user's identity when they attempt to reset their password
+
     const resetPasswordToken = jwt.sign(
       { userId: user._id, purpose: "password-reset" },
       process.env.JWT_SECRET,
       { expiresIn: "10m" }
     );
-    // Create a new verification document for the password reset request
-    // store the reset token and its expiration time
+
     await Verification.create({
       userId: user._id,
       token: resetPasswordToken,
-      expiresAt: new Date(Date.now() + 600000), // Set expiration time for the token (10 minutes)
+      expiresAt: new Date(Date.now() + 600000),
     });
 
-    // Constructing the reset link using the reset token
-    // This link will be sent to the user's email and will allow them to reset their password
     const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
-    // Send the reset link to the user's email
-    const emailBody = `<p>Click the link below to reset your password:</p>
-    <a href="${resetPasswordLink}">Reset Password</a>`;
-    const emailSubject = "Password Reset Request for ProjectGrid";
+
+    const emailBody = getResetPasswordEmailTemplate(
+      resetPasswordLink,
+      user.name
+    );
+    const emailSubject = "Password Reset Request - ProjectGrid";
+
     const isEmailSent = await sendEmail(email, emailSubject, emailBody);
     if (!isEmailSent) {
       return res.status(500).json({
         message: "Failed to send password reset email",
       });
     }
+
     res.status(200).json({
-      message: "A password reset link has been sent to your email address. Please check your email to reset your password.",
+      message: "A password reset link has been sent to your email.",
     });
   } catch (error) {
     console.log(error);
@@ -313,12 +363,9 @@ const resetPasswordRequest = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
-// Function to verify the reset token and reset the user's password
-// This function will be called when the user clicks the reset link in their email
-// It will verify the token and update the user's password if the token is valid
-
+// --- Verify and Reset Password ---
 const verifyAndResetPassword = async (req, res) => {
   try {
     const { token, newPassword, confirmPassword } = req.body;
@@ -336,7 +383,7 @@ const verifyAndResetPassword = async (req, res) => {
     }
     const verification = await Verification.findOne({
       userId,
-      token, 
+      token,
     });
     if (!verification) {
       return res.status(401).json({
@@ -355,34 +402,37 @@ const verifyAndResetPassword = async (req, res) => {
         message: "User not found",
       });
     }
-    // Check if the new password and confirm password match
-    // If they do not match, return an error response
-    // This ensures that the user has to enter the same password twice for confirmation
+
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         message: "New password and confirm password do not match",
       });
     }
-    const salt = await bcrypt.genSalt(10); // Generate a salt for hashing
-    const hashPassword = await bcrypt.hash(newPassword, salt);
-    // Update the user's password with the new hashed password
-    user.password = hashPassword;
-    await user.save(); // Save the updated user document
 
-    // Delete the verification document after successful password reset
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashPassword;
+    await user.save();
+
     await Verification.findByIdAndDelete(verification._id);
 
     return res.status(200).json({
       message: "Password reset successfully",
-      user: { name: user.name, email: user.email }, // Return the user data (excluding password)
+      user: { name: user.name, email: user.email },
     });
-    
-  }catch (error) {
+  } catch (error) {
     return res.status(500).json({
       message: "Internal server error",
       error: error.message,
     });
-  } 
-}
+  }
+};
 
-export { loginUser, registerUser, verifyEmail, resetPasswordRequest, verifyAndResetPassword };
+export {
+  loginUser,
+  registerUser,
+  verifyEmail,
+  resetPasswordRequest,
+  verifyAndResetPassword,
+};
