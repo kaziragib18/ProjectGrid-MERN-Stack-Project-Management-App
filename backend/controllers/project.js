@@ -127,4 +127,118 @@ const getProjectTasks = async (req, res) => {
   }
 };
 
-export { createProject, getProjectDetails, getProjectTasks };
+// ================================
+// Update project
+// ================================
+const updateProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { title, description, status } = req.body;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // Only workspace members should update
+    const workspace = await Workspace.findById(project.workspace);
+    const isMember = workspace.members.some(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!isMember) return res.status(403).json({ message: "Not authorized" });
+
+    if (title !== undefined) project.title = title;
+    if (description !== undefined) project.description = description;
+    if (status !== undefined) project.status = status;
+
+    await project.save();
+    res.status(200).json(project);
+  } catch (error) {
+    console.error("Error updating project:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ================================
+// Delete project
+// ================================
+const deleteProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const workspace = await Workspace.findById(project.workspace);
+    if (!workspace)
+      return res.status(404).json({ message: "Workspace not found" });
+
+    // Only owner/admin allowed
+    const member = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!member || !["owner", "admin"].includes(member.role)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Remove from workspace projects
+    workspace.projects = workspace.projects.filter(
+      (id) => id.toString() !== projectId
+    );
+    await workspace.save();
+
+    await Project.findByIdAndDelete(projectId);
+
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ================================
+// Get all projects in a workspace
+// ================================
+const getWorkspaceProjects = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId).populate({
+      path: "projects",
+      populate: { path: "members.user", select: "name email profilePicture" },
+    });
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // Only members can view projects
+    const isMember = workspace.members.some(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!isMember) {
+      return res.status(403).json({ message: "You are not a member" });
+    }
+
+    if (!workspace.projects.length) {
+      return res
+        .status(200)
+        .json({
+          projects: [],
+          message: "No projects created in this workspace",
+        });
+    }
+
+    return res.status(200).json({ projects: workspace.projects });
+  } catch (error) {
+    console.error("Error fetching workspace projects:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export {
+  createProject,
+  getProjectDetails,
+  getProjectTasks,
+  updateProject,
+  deleteProject,
+  getWorkspaceProjects,
+};
