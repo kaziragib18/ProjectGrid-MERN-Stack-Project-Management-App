@@ -65,7 +65,6 @@ const getWorkspaceDetails = async (req, res) => {
 
     const workspace = await Workspace.findOne({
       _id: workspaceId,
-      "members.user": req.user._id, // Must be a member
     }).populate("members.user", "name email profilePicture");
 
     if (!workspace) {
