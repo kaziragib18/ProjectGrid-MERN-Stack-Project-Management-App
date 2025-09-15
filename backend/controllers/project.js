@@ -57,23 +57,25 @@ const getProjectDetails = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    // Find the project and populate member info
-    const project = await Project.findById(projectId).populate(
-      "members.user",
-      "name profilePicture email"
-    );
+    // Find the project and populate workspace + members
+    const project = await Project.findById(projectId)
+      .populate("members.user", "name profilePicture email")
+      .populate("workspace", "members"); // include workspace for member check
+
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Ensure the requesting user is a member
-    const isMember = project.members.some(
-      (member) => member.user._id.toString() === req.user._id.toString()
+    // Ensure the requesting user is a member of the workspace
+    const workspace = await Workspace.findById(project.workspace._id);
+    const isMember = workspace.members.some(
+      (member) => member.user.toString() === req.user._id.toString()
     );
+
     if (!isMember) {
       return res
         .status(403)
-        .json({ message: "You are not a member of this project" });
+        .json({ message: "You are not a member of this workspace" });
     }
 
     return res.status(200).json(project);
@@ -92,21 +94,23 @@ const getProjectTasks = async (req, res) => {
 
     // Find the project
     const project = await Project.findById(projectId).populate(
-      "members.user",
-      "name profilePicture email"
+      "workspace",
+      "members"
     );
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Ensure the requesting user is a member
-    const isMember = project.members.some(
-      (member) => member.user._id.toString() === req.user._id.toString()
+    // Ensure the requesting user is a member of the workspace
+    const workspace = await Workspace.findById(project.workspace._id);
+    const isMember = workspace.members.some(
+      (member) => member.user.toString() === req.user._id.toString()
     );
+
     if (!isMember) {
       return res
         .status(403)
-        .json({ message: "You are not a member of this project" });
+        .json({ message: "You are not a member of this workspace" });
     }
 
     // Fetch tasks associated with this project (non-archived)

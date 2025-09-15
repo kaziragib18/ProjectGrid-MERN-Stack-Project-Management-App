@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Loader2,
   Trash2,
@@ -10,11 +11,13 @@ import {
   UserX as RemoveIcon,
   Crown as OwnerIcon,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import CustomLoader from "@/components/ui/customLoader";
 import { workspaceSchema } from "@/lib/schema";
 import { fetchData, updateData, deleteData, postData } from "@/lib/fetch-util";
+
 import {
   Form,
   FormControl,
@@ -26,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -33,10 +37,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+
 import type { WorkspaceForm } from "@/components/workspace/create-workspace";
 import type { MemberProps, Workspace } from "@/types";
 import { useAuth } from "@/provider/auth-context";
 
+// Predefined color palette for workspace theme
 export const colorOptions = [
   "#4F46E5",
   "#10B981",
@@ -49,18 +55,20 @@ export const colorOptions = [
 ];
 
 const Settings = () => {
+  // Extract workspaceId from URL
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
+  // Local states
   const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<MemberProps[]>([]);
+  const [members, setMembers] = useState<MemberProps[]>([]); // List of workspace members
   const [currentUserRole, setCurrentUserRole] = useState<
     "owner" | "admin" | "member" | "viewer" | null
-  >(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  >(null); // Current user's role in workspace
+  const [isSubmitting, setIsSubmitting] = useState(false); // Saving form state
+  const [isDeleting, setIsDeleting] = useState(false); // Deleting workspace state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false); // Delete workspace confirmation modal
 
   // For remove member dialog
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
@@ -75,6 +83,7 @@ const Settings = () => {
   );
   const [isTransferring, setIsTransferring] = useState(false);
 
+  // Form setup with default values + schema validation
   const form = useForm<WorkspaceForm>({
     resolver: zodResolver(workspaceSchema),
     defaultValues: {
@@ -84,17 +93,22 @@ const Settings = () => {
     },
   });
 
+  // Load workspace data when component mounts or workspaceId changes
   useEffect(() => {
     const loadWorkspace = async () => {
       setLoading(true);
       try {
+        // Fetch workspace details
         const data = await fetchData<Workspace>(`/workspaces/${workspaceId}`);
+
+        // Populate form with existing workspace data
         form.reset({
           name: data.name,
           description: data.description || "",
           color: data.color || colorOptions[0],
         });
 
+        // Map members into simplified structure
         const mappedMembers = (data.members || []).map((m) => ({
           _id: m.user._id,
           user: m.user,
@@ -103,6 +117,7 @@ const Settings = () => {
         }));
         setMembers(mappedMembers);
 
+        // Set current user’s role in workspace
         const current = mappedMembers.find(
           (m) => m.user._id === currentUser?._id
         );
@@ -116,13 +131,14 @@ const Settings = () => {
     if (workspaceId) loadWorkspace();
   }, [workspaceId, form, currentUser]);
 
+  // Handle workspace update (form submit)
   const onSubmit = async (data: WorkspaceForm) => {
     setIsSubmitting(true);
     try {
       await updateData(`/workspaces/${workspaceId}`, data);
       toast.success("Workspace updated successfully!");
-      form.reset(data);
-      navigate(`/workspaces/${workspaceId}`);
+      form.reset(data); // Reset form with updated values
+      navigate(`/workspaces/${workspaceId}`); // Redirect back to workspace page
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Update failed");
     } finally {
@@ -130,13 +146,14 @@ const Settings = () => {
     }
   };
 
+  // Handle workspace deletion
   const onDeleteWorkspace = async () => {
     setIsDeleting(true);
     try {
       await deleteData(`/workspaces/${workspaceId}`);
       toast.success("Workspace deleted successfully!");
       setShowDeleteDialog(false);
-      navigate(`/workspaces`);
+      navigate(`/workspaces`); // Redirect to workspaces list
     } catch (error: any) {
       toast.error(
         error.response?.data?.message || "Failed to delete workspace"
@@ -146,11 +163,13 @@ const Settings = () => {
     }
   };
 
+  // Trigger remove member dialog
   const removeMember = (member: MemberProps) => {
     setSelectedMember(member);
     setShowRemoveDialog(true);
   };
 
+  // Confirm remove member
   const confirmRemoveMember = async () => {
     if (!selectedMember) return;
     try {
@@ -169,11 +188,13 @@ const Settings = () => {
     }
   };
 
+  // Trigger transfer ownership dialog
   const transferOwnership = (member: MemberProps) => {
     setTransferTarget(member);
     setShowTransferDialog(true);
   };
 
+  // Confirm transfer ownership
   const confirmTransferOwnership = async () => {
     if (!transferTarget) return;
     setIsTransferring(true);
@@ -182,6 +203,8 @@ const Settings = () => {
         `/workspaces/${workspaceId}/transfer-ownership/${transferTarget.user._id}`,
         {}
       );
+
+      // Update roles locally
       setMembers((prev) =>
         prev.map((m) => {
           if (m.user._id === transferTarget.user._id)
@@ -190,7 +213,8 @@ const Settings = () => {
           return m;
         })
       );
-      setCurrentUserRole("member");
+
+      setCurrentUserRole("member"); // Downgrade current user after transfer
       toast.success("Ownership transferred successfully");
     } catch {
       toast.error("Failed to transfer ownership");
@@ -201,6 +225,7 @@ const Settings = () => {
     }
   };
 
+  // If no workspaceId is provided in URL
   if (!workspaceId) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center">
@@ -212,20 +237,22 @@ const Settings = () => {
     );
   }
 
+  // Show loader while data is fetching
   if (loading) return <CustomLoader />;
 
   return (
     <main className="max-w-xl mx-auto py-8 px-4 space-y-10">
+      {/* Page Header */}
       <header className="mb-6 flex items-center space-x-3">
         <SettingsIcon className="w-7 h-7 text-teal-600" />
         <h1 className="text-3xl font-bold">Workspace Settings</h1>
       </header>
 
-      {/* Update Workspace Card */}
+      {/* Update Workspace Form */}
       <div className="border rounded-lg p-6 shadow-sm bg-white">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Name, Description, Color fields (same as before) */}
+            {/* Name field */}
             <FormField
               control={form.control}
               name="name"
@@ -239,6 +266,8 @@ const Settings = () => {
                 </FormItem>
               )}
             />
+
+            {/* Description field */}
             <FormField
               control={form.control}
               name="description"
@@ -256,6 +285,8 @@ const Settings = () => {
                 </FormItem>
               )}
             />
+
+            {/* Color field */}
             <FormField
               control={form.control}
               name="color"
@@ -288,6 +319,8 @@ const Settings = () => {
                 </FormItem>
               )}
             />
+
+            {/* Submit button */}
             <div className="flex justify-end mt-4">
               <Button
                 type="submit"
@@ -308,7 +341,7 @@ const Settings = () => {
         </Form>
       </div>
 
-      {/* Members Card */}
+      {/* Members List */}
       <div className="border rounded-lg p-6 shadow-sm bg-white">
         <h2 className="text-xl font-semibold mb-4">Workspace Members</h2>
         {members.length === 0 ? (
@@ -320,6 +353,7 @@ const Settings = () => {
                 key={member.user._id}
                 className="flex items-center justify-between"
               >
+                {/* Member info */}
                 <div className="flex items-center gap-3">
                   {member.user.profilePicture && (
                     <img
@@ -336,6 +370,7 @@ const Settings = () => {
                   </div>
                 </div>
 
+                {/* Role + actions */}
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
@@ -348,6 +383,7 @@ const Settings = () => {
                     {member.role}
                   </span>
 
+                  {/* Only owners can transfer ownership or remove members */}
                   {currentUserRole === "owner" && member.role !== "owner" && (
                     <>
                       <Button
@@ -375,7 +411,7 @@ const Settings = () => {
         )}
       </div>
 
-      {/* Danger Zone Card */}
+      {/* Danger Zone */}
       <div className="border rounded-lg p-6 shadow-sm bg-white">
         <div className="flex items-center mb-4 space-x-3">
           <AlertTriangle className="w-6 h-6 text-red-600" />
