@@ -11,6 +11,7 @@ import {
   getWorkspaces,
   getWorkspaceStats,
   inviteUserToWorkspace,
+  removeWorkspaceMember,
   updateWorkspace,
 } from "../controllers/workspace.js";
 import {
@@ -48,6 +49,13 @@ router.put(
   authMiddleware,
   validateRequest({ body: updateWorkspaceSchema }),
   updateWorkspace
+);
+
+// Remove a member from workspace (owner only)
+router.delete(
+  "/:workspaceId/members/:memberId",
+  authMiddleware,
+  removeWorkspaceMember
 );
 
 //delete workspace and all related projects + tasks

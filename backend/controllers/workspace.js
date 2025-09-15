@@ -660,6 +660,55 @@ const acceptInviteByToken = async (req, res) => {
   }
 };
 
+/**
+ * REMOVE MEMBER FROM WORKSPACE
+ * - Only owner can remove other members
+ */
+const removeWorkspaceMember = async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // Check if requester is owner
+    const requester = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!requester || requester.role !== "owner") {
+      return res
+        .status(403)
+        .json({ message: "Only the owner can remove members" });
+    }
+
+    // Prevent removing the owner
+    const memberToRemove = workspace.members.find(
+      (m) => m.user.toString() === memberId
+    );
+    if (!memberToRemove) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    if (memberToRemove.role === "owner") {
+      return res.status(400).json({ message: "Cannot remove the owner" });
+    }
+
+    // Remove the member
+    workspace.members = workspace.members.filter(
+      (m) => m.user.toString() !== memberId
+    );
+
+    await workspace.save();
+
+    res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -671,4 +720,5 @@ export {
   inviteUserToWorkspace,
   acceptGenerateInvite,
   acceptInviteByToken,
+  removeWorkspaceMember,
 };
