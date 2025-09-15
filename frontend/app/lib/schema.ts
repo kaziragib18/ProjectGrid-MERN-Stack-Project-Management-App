@@ -1,14 +1,12 @@
 import { ProjectStatus } from "@/types";
 import { z } from "zod";
 
-
 // Auth Schemas
 // The SignInSchema is used to validate the sign-in form data.
 export const SignInSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password is required"),
 });
-
 
 // The SignUpSchema validates new user registration.
 export const SignUpSchema = z
@@ -35,7 +33,6 @@ export const resetPasswordSchema = z
     message: "Passwords do not match",
   });
 
-  
 // The forgotPasswordSchema validates the email input for forgot password form
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -48,7 +45,6 @@ export const workspaceSchema = z.object({
   color: z.string().min(3, "Color must be at least 3 characters"),
   description: z.string().optional(),
 });
-
 
 // Project Schema
 // Validates a project entity

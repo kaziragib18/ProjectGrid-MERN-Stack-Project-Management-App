@@ -143,7 +143,7 @@ const Settings = () => {
     if (workspaceId) loadWorkspaceAndProjects();
   }, [workspaceId, form, currentUser]);
 
-  // Workspace handlers
+  // ==================== Workspace Handlers ====================
   const onSubmit = async (data: WorkspaceForm) => {
     setIsSubmitting(true);
     try {
@@ -174,7 +174,7 @@ const Settings = () => {
     }
   };
 
-  // Member management
+  // ==================== Member Handlers ====================
   const removeMember = (member: MemberProps) => {
     setSelectedMember(member);
     setShowRemoveDialog(true);
@@ -231,9 +231,9 @@ const Settings = () => {
     }
   };
 
-  // Project handlers
+  // ==================== Project Handlers ====================
   const openProject = (projectId: string) => {
-    if (currentUserRole !== "owner") return;
+    if (!["owner", "admin"].includes(currentUserRole!)) return;
     const project = projects.find((p) => p._id === projectId);
     if (!project) return;
     setSelectedProject(project);
@@ -282,17 +282,6 @@ const Settings = () => {
     }
   };
 
-  if (!workspaceId) {
-    return (
-      <div className="max-w-xl mx-auto py-20 text-center">
-        <h2 className="text-2xl font-semibold mb-2">No workspace selected</h2>
-        <p className="text-muted-foreground">
-          Please select a workspace to continue.
-        </p>
-      </div>
-    );
-  }
-
   if (loading) return <CustomLoader />;
 
   return (
@@ -302,7 +291,7 @@ const Settings = () => {
         <h1 className="text-3xl font-bold">Settings</h1>
       </header>
 
-      {/* Toggle Tabs */}
+      {/* Tabs */}
       <div className="flex gap-4 border-b mb-6">
         <button
           className={cn(
@@ -328,10 +317,10 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* Workspace Settings Tab */}
+      {/* ================= Workspace Tab ================= */}
       {activeTab === "workspace" && (
         <section className="space-y-6">
-          {/* Workspace update form */}
+          {/* Workspace Form */}
           <div className="border rounded-lg p-6 shadow-sm bg-white">
             <Form {...form}>
               <form
@@ -420,7 +409,7 @@ const Settings = () => {
             </Form>
           </div>
 
-          {/* Member Management & Transfer */}
+          {/* Members List */}
           <div className="border rounded-lg p-6 shadow-sm bg-white">
             <h2 className="text-xl font-semibold mb-4">Workspace Members</h2>
             {members.length === 0 ? (
@@ -465,7 +454,6 @@ const Settings = () => {
                               size="sm"
                               variant="secondary"
                               onClick={() => transferOwnership(member)}
-                              className="px-2 py-1"
                             >
                               <OwnerIcon className="w-4 h-4" />
                             </Button>
@@ -473,7 +461,6 @@ const Settings = () => {
                               size="sm"
                               variant="destructive"
                               onClick={() => removeMember(member)}
-                              className="px-2 py-1"
                             >
                               <RemoveIcon className="w-4 h-4" />
                             </Button>
@@ -510,7 +497,7 @@ const Settings = () => {
         </section>
       )}
 
-      {/* Project Settings Tab */}
+      {/* ================= Project Tab ================= */}
       {activeTab === "project" && (
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {projects.length === 0 ? (
@@ -545,7 +532,7 @@ const Settings = () => {
                     {project.status}
                   </span>
                   <div className="flex gap-2">
-                    {currentUserRole === "owner" && (
+                    {["owner", "admin"].includes(currentUserRole!) && (
                       <>
                         <Button
                           size="sm"
@@ -571,107 +558,93 @@ const Settings = () => {
         </section>
       )}
 
-      {/* Project Edit Dialog */}
-      {selectedProject && (
-        <Dialog
-          open={!!selectedProject}
-          onOpenChange={() => setSelectedProject(null)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Project</DialogTitle>
-            </DialogHeader>
-            <Form {...projectForm}>
-              <form
-                onSubmit={projectForm.handleSubmit(updateProjectHandler)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={projectForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Project Title" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={projectForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Project Description"
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={projectForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <select
-                          {...field}
-                          className="border rounded-md w-full p-2"
-                        >
-                          <option value="To Do">To Do</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedProject(null)}
-                    disabled={isProjectUpdating}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="hover:bg-teal-600"
-                    type="submit"
-                    disabled={isProjectUpdating}
-                  >
-                    {isProjectUpdating && (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    )}
-                    Save
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* ================= Edit Project Dialog ================= */}
+      <Dialog
+        open={!!selectedProject}
+        onOpenChange={() => setSelectedProject(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+          </DialogHeader>
+          <Form {...projectForm}>
+            <form
+              onSubmit={projectForm.handleSubmit(updateProjectHandler)}
+              className="space-y-4"
+            >
+              <FormField
+                control={projectForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={projectForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={projectForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <select {...field} className="border p-2 rounded w-full">
+                        <option value="ToDo">To Do</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedProject(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isProjectUpdating || !projectForm.formState.isDirty}
+                >
+                  {isProjectUpdating ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-      {/* Project Delete Confirmation Dialog */}
+      {/* ================= Delete Project Dialog ================= */}
       <Dialog
         open={showDeleteProjectDialog}
-        onOpenChange={setShowDeleteProjectDialog}
+        onOpenChange={() => setShowDeleteProjectDialog(false)}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Project</DialogTitle>
           </DialogHeader>
-          <p className="mb-4">
-            Are you sure you want to delete project{" "}
+          <p>
+            Are you sure you want to delete{" "}
             <strong>{projectToDelete?.title}</strong>? This action cannot be
             undone.
           </p>
@@ -689,72 +662,83 @@ const Settings = () => {
         </DialogContent>
       </Dialog>
 
-      {/* The member management, transfer, and workspace delete dialogs remain unchanged */}
-      {/* Remove Member Dialog */}
-      <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+      {/* ================= Remove Member Dialog ================= */}
+      <Dialog
+        open={showRemoveDialog}
+        onOpenChange={() => setShowRemoveDialog(false)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Remove</DialogTitle>
+            <DialogTitle>Remove Member?</DialogTitle>
           </DialogHeader>
-          <p className="mb-4">Are you sure you want to remove this user?</p>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowRemoveDialog(false)}
-            >
+          <p>
+            Are you sure you want to remove{" "}
+            <strong>{selectedMember?.user.name}</strong> from this workspace?
+          </p>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSelectedProject(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmRemoveMember}>
-              Remove
+            <Button
+              type="submit"
+              disabled={isProjectUpdating || !projectForm.formState.isDirty}
+              className={cn(
+                "transition-colors duration-200",
+                !projectForm.formState.isDirty &&
+                  "bg-gray-200 text-gray-500 cursor-not-allowed hover:bg-gray-200"
+              )}
+            >
+              {isProjectUpdating ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Transfer Ownership Dialog */}
-      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+      {/* ================= Transfer Ownership Dialog ================= */}
+      <Dialog
+        open={showTransferDialog}
+        onOpenChange={() => setShowTransferDialog(false)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Transfer Ownership</DialogTitle>
+            <DialogTitle>Transfer Ownership?</DialogTitle>
           </DialogHeader>
-          <p className="mb-4">
-            Are you sure you want to transfer workspace ownership to{" "}
-            <strong>{transferTarget?.user.name}</strong>? You will become a
-            regular member.
+          <p>
+            Are you sure you want to transfer ownership to{" "}
+            <strong>{transferTarget?.user.name}</strong>?
           </p>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setShowTransferDialog(false)}
-              disabled={isTransferring}
             >
               Cancel
             </Button>
             <Button
-              variant="secondary"
+              variant="destructive"
               onClick={confirmTransferOwnership}
               disabled={isTransferring}
             >
-              {isTransferring && (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              )}
               Transfer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Workspace Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      {/* ================= Delete Workspace Dialog ================= */}
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={() => setShowDeleteDialog(false)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogTitle>Delete Workspace?</DialogTitle>
           </DialogHeader>
-          <p className="mb-4">
+          <p>
             Are you sure you want to delete this workspace? This action cannot
             be undone.
           </p>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
@@ -766,7 +750,6 @@ const Settings = () => {
               onClick={onDeleteWorkspace}
               disabled={isDeleting}
             >
-              {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Delete
             </Button>
           </DialogFooter>
