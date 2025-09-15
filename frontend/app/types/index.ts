@@ -25,14 +25,14 @@ export interface Workspace {
 }
 
 export enum ProjectStatus {
-  Backlog = "Backlog",        // Task is logged but not started
-  ToDo = "To Do",             // Task is ready to start
+  Backlog = "Backlog", // Task is logged but not started
+  ToDo = "To Do", // Task is ready to start
   InProgress = "In Progress", // Task is currently being worked on
-  Review = "In Review",      // Task is completed and under review
-  OnHold = "On Hold",        // Task is paused temporarily
-  Completed = "Completed",   // Task is finished successfully
-  Cancelled = "Cancelled",   // Task will not be completed
-  Archived = "Archived",     // Task is finished and stored for reference
+  Review = "In Review", // Task is completed and under review
+  OnHold = "On Hold", // Task is paused temporarily
+  Completed = "Completed", // Task is finished successfully
+  Cancelled = "Cancelled", // Task will not be completed
+  Archived = "Archived", // Task is finished and stored for reference
 }
 
 export interface Project {
@@ -104,7 +104,6 @@ export interface MemberProps {
   joinedAt: Date;
 }
 
-
 export type ResourceType =
   | "Task"
   | "Project"
@@ -175,7 +174,7 @@ export interface TaskTrendsData {
   name: string;
   completed: number;
   inProgress: number;
-  todo: number;
+  toDo: number;
 }
 
 export interface TaskPriorityData {

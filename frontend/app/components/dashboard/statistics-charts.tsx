@@ -150,57 +150,62 @@ export const StatisticsCharts = ({
             config={{
               completed: { color: "#10b981" },
               inProgress: { color: "#3b82f6" },
-              toDo: { color: "#6b7280" },
+              toDo: { color: "#FFA500" },
             }}
           >
-            <LineChart
-              data={taskTrendsData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-            >
-              <XAxis
-                dataKey="name"
-                fontSize={12}
-                stroke="#888"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                fontSize={12}
-                stroke="#888"
-                tickLine={false}
-                axisLine={false}
-              />
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <ChartTooltip />
-              <Line
-                type="monotone"
-                dataKey="completed"
-                stroke="#10b981"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="inProgress"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="toDo"
-                stroke="#FFA500"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </LineChart>
+            {taskTrendsData.length > 0 ? (
+              <LineChart
+                data={taskTrendsData}
+                margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+              >
+                <XAxis
+                  dataKey="name"
+                  fontSize={12}
+                  stroke="#888"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  fontSize={12}
+                  stroke="#888"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <ChartTooltip />
+                <Line
+                  type="monotone"
+                  dataKey="completed"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="inProgress"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="toDo"
+                  stroke="#FFA500"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </LineChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No task trends data available.
+              </div>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>
 
-      {/* Project Status Pie Chart with outside labels and connector lines */}
-      {/* Project Status Pie Chart with fallback when no data */}
+      {/* Project Status Pie Chart with fallback */}
       <Card>
         <CardHeader className="flex justify-between items-center pb-2">
           <div>
@@ -211,10 +216,9 @@ export const StatisticsCharts = ({
           </div>
           <ChartPie className="size-5 text-muted-foreground" />
         </CardHeader>
-
-        <CardContent>
+        <CardContent className="h-[300px] flex items-center justify-center">
           <ChartContainer
-            className="h-[300px] w-full flex items-center justify-center"
+            className="h-full w-full flex items-center justify-center"
             config={{
               Completed: { color: "#10b981" },
               "In Progress": { color: "#3b82f6" },
@@ -232,10 +236,8 @@ export const StatisticsCharts = ({
                   paddingAngle={2}
                   dataKey="value"
                   nameKey="name"
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                  labelLine={false}
+                  label={renderLabelText}
+                  labelLine={renderLabelLine}
                 >
                   {projectStatusData
                     .filter((entry) => entry.value > 0)
@@ -247,7 +249,7 @@ export const StatisticsCharts = ({
                 <ChartLegend content={<ChartLegendContent />} />
               </PieChart>
             ) : (
-              <div className="text-center text-muted-foreground text-sm">
+              <div className="flex items-center justify-center h-full w-full text-muted-foreground text-sm">
                 Currently no task is in progress or completed.
               </div>
             )}
@@ -255,7 +257,7 @@ export const StatisticsCharts = ({
         </CardContent>
       </Card>
 
-      {/* Task Priority Pie Chart with filtering out zero-value slices */}
+      {/* Task Priority Pie Chart with fallback */}
       <Card>
         <CardHeader className="flex justify-between items-center pb-2">
           <div>
@@ -265,7 +267,6 @@ export const StatisticsCharts = ({
             <CardDescription>Task priority breakdown</CardDescription>
           </div>
         </CardHeader>
-
         <CardContent>
           <ChartContainer
             className="h-[300px] w-full"
@@ -275,35 +276,41 @@ export const StatisticsCharts = ({
               Low: { color: "#6b7280" },
             }}
           >
-            <PieChart>
-              <Pie
-                data={taskPriorityData.filter((entry) => entry.value > 0)} // <-- Filter here
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
-                labelLine={false}
-              >
-                {taskPriorityData
-                  .filter((entry) => entry.value > 0)
-                  .map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-              </Pie>
-              <ChartTooltip />
-              <ChartLegend content={<ChartLegendContent />} />
-            </PieChart>
+            {taskPriorityData.filter((entry) => entry.value > 0).length > 0 ? (
+              <PieChart>
+                <Pie
+                  data={taskPriorityData.filter((entry) => entry.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
+                  labelLine={false}
+                >
+                  {taskPriorityData
+                    .filter((entry) => entry.value > 0)
+                    .map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                </Pie>
+                <ChartTooltip />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No task priority data available.
+              </div>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>
 
-      {/* Workspace Productivity Bar Chart */}
+      {/* Workspace Productivity Bar Chart with fallback */}
       <Card className="lg:col-span-2">
         <CardHeader className="flex justify-between items-center pb-2">
           <div>
@@ -314,7 +321,6 @@ export const StatisticsCharts = ({
           </div>
           <ChartBarBig className="size-5 text-muted-foreground" />
         </CardHeader>
-
         <CardContent>
           <ChartContainer
             className="h-[300px] w-full"
@@ -323,42 +329,47 @@ export const StatisticsCharts = ({
               completed: { color: "#3b82f6" },
             }}
           >
-            <BarChart
-              data={workspaceProductivityData}
-              barGap={4}
-              barSize={20}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-            >
-              <XAxis
-                dataKey="name"
-                fontSize={12}
-                stroke="#888"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                fontSize={12}
-                stroke="#888"
-                tickLine={false}
-                axisLine={false}
-              />
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              {/* Use custom tooltip content with colored boxes and black font */}
-              <ChartTooltip content={<CustomTooltipContent />} />
-              <Bar
-                dataKey="total"
-                fill="#ef4444"
-                radius={[4, 4, 0, 0]}
-                name="Total Tasks:"
-              />
-              <Bar
-                dataKey="completed"
-                fill="#3b82f6"
-                radius={[4, 4, 0, 0]}
-                name="Completed Tasks:"
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </BarChart>
+            {workspaceProductivityData.length > 0 ? (
+              <BarChart
+                data={workspaceProductivityData}
+                barGap={4}
+                barSize={20}
+                margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+              >
+                <XAxis
+                  dataKey="name"
+                  fontSize={12}
+                  stroke="#888"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  fontSize={12}
+                  stroke="#888"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <ChartTooltip content={<CustomTooltipContent />} />
+                <Bar
+                  dataKey="total"
+                  fill="#ef4444"
+                  radius={[4, 4, 0, 0]}
+                  name="Total Tasks:"
+                />
+                <Bar
+                  dataKey="completed"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                  name="Completed Tasks:"
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </BarChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No workspace productivity data available.
+              </div>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>
