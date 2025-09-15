@@ -8,12 +8,13 @@ import {
   AlertTriangle,
   Settings as SettingsIcon,
   UserX as RemoveIcon,
+  Crown as OwnerIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import CustomLoader from "@/components/ui/customLoader";
 import { workspaceSchema } from "@/lib/schema";
-import { fetchData, updateData, deleteData } from "@/lib/fetch-util";
+import { fetchData, updateData, deleteData, postData } from "@/lib/fetch-util";
 import {
   Form,
   FormControl,
@@ -66,6 +67,13 @@ const Settings = () => {
   const [selectedMember, setSelectedMember] = useState<MemberProps | null>(
     null
   );
+
+  // For transfer ownership dialog
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [transferTarget, setTransferTarget] = useState<MemberProps | null>(
+    null
+  );
+  const [isTransferring, setIsTransferring] = useState(false);
 
   const form = useForm<WorkspaceForm>({
     resolver: zodResolver(workspaceSchema),
@@ -161,6 +169,38 @@ const Settings = () => {
     }
   };
 
+  const transferOwnership = (member: MemberProps) => {
+    setTransferTarget(member);
+    setShowTransferDialog(true);
+  };
+
+  const confirmTransferOwnership = async () => {
+    if (!transferTarget) return;
+    setIsTransferring(true);
+    try {
+      await postData(
+        `/workspaces/${workspaceId}/transfer-ownership/${transferTarget.user._id}`,
+        {}
+      );
+      setMembers((prev) =>
+        prev.map((m) => {
+          if (m.user._id === transferTarget.user._id)
+            return { ...m, role: "owner" };
+          if (m.user._id === currentUser?._id) return { ...m, role: "member" };
+          return m;
+        })
+      );
+      setCurrentUserRole("member");
+      toast.success("Ownership transferred successfully");
+    } catch {
+      toast.error("Failed to transfer ownership");
+    } finally {
+      setTransferTarget(null);
+      setShowTransferDialog(false);
+      setIsTransferring(false);
+    }
+  };
+
   if (!workspaceId) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center">
@@ -185,6 +225,7 @@ const Settings = () => {
       <div className="border rounded-lg p-6 shadow-sm bg-white">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Name, Description, Color fields (same as before) */}
             <FormField
               control={form.control}
               name="name"
@@ -198,7 +239,6 @@ const Settings = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="description"
@@ -216,7 +256,6 @@ const Settings = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="color"
@@ -249,7 +288,6 @@ const Settings = () => {
                 </FormItem>
               )}
             />
-
             <div className="flex justify-end mt-4">
               <Button
                 type="submit"
@@ -311,14 +349,24 @@ const Settings = () => {
                   </span>
 
                   {currentUserRole === "owner" && member.role !== "owner" && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removeMember(member)}
-                      className="px-2 py-1"
-                    >
-                      <RemoveIcon className="w-4 h-4" />
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => transferOwnership(member)}
+                        className="px-2 py-1"
+                      >
+                        <OwnerIcon className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removeMember(member)}
+                        className="px-2 py-1"
+                      >
+                        <RemoveIcon className="w-4 h-4" />
+                      </Button>
+                    </>
                   )}
                 </div>
               </li>
@@ -394,6 +442,39 @@ const Settings = () => {
             </Button>
             <Button variant="destructive" onClick={confirmRemoveMember}>
               Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer Ownership Dialog */}
+      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transfer Ownership</DialogTitle>
+          </DialogHeader>
+          <p className="mb-4">
+            Are you sure you want to transfer workspace ownership to{" "}
+            <strong>{transferTarget?.user.name}</strong>? You will become a
+            regular member.
+          </p>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowTransferDialog(false)}
+              disabled={isTransferring}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmTransferOwnership}
+              disabled={isTransferring}
+            >
+              {isTransferring && (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              )}
+              Transfer
             </Button>
           </DialogFooter>
         </DialogContent>

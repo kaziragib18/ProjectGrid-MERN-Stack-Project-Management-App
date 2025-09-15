@@ -709,6 +709,50 @@ const removeWorkspaceMember = async (req, res) => {
   }
 };
 
+/**
+ * TRANSFER OWNERSHIP OF THE WORKSPACE
+ */
+const transferWorkspaceOwnership = async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // Check if current user is the owner
+    const currentOwner = workspace.members.find(
+      (m) => m.user.toString() === req.user._id.toString()
+    );
+    if (!currentOwner || currentOwner.role !== "owner") {
+      return res
+        .status(403)
+        .json({ message: "Only owner can transfer ownership" });
+    }
+
+    // Check if target member exists
+    const targetMember = workspace.members.find(
+      (m) => m.user.toString() === memberId
+    );
+    if (!targetMember) {
+      return res.status(404).json({ message: "Target member not found" });
+    }
+
+    // Transfer roles
+    currentOwner.role = "member"; // Current owner becomes a regular member
+    targetMember.role = "owner"; // Target member becomes owner
+
+    await workspace.save();
+
+    res.status(200).json({ message: "Ownership transferred successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createWorkspace,
   getWorkspaces,
@@ -721,4 +765,5 @@ export {
   acceptGenerateInvite,
   acceptInviteByToken,
   removeWorkspaceMember,
+  transferWorkspaceOwnership,
 };

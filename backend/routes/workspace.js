@@ -12,6 +12,7 @@ import {
   getWorkspaceStats,
   inviteUserToWorkspace,
   removeWorkspaceMember,
+  transferWorkspaceOwnership,
   updateWorkspace,
 } from "../controllers/workspace.js";
 import {
@@ -56,6 +57,13 @@ router.delete(
   "/:workspaceId/members/:memberId",
   authMiddleware,
   removeWorkspaceMember
+);
+
+// Transfer ownership of the workspace (owner only)
+router.post(
+  "/:workspaceId/transfer-ownership/:memberId",
+  authMiddleware,
+  transferWorkspaceOwnership
 );
 
 //delete workspace and all related projects + tasks
