@@ -3,7 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import dotenv from "dotenv";
-
+import path from "path";
 import routes from "./routes/index.js"; // Import routes
 // Load environment variables from .env file
 
@@ -34,6 +34,10 @@ mongoose
 
 app.use(express.json()); // Parse JSON bodies
 
+// Serve uploaded files
+const __dirname = path.resolve();
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Environment variables
 const PORT = process.env.PORT || 5000;
 
@@ -63,4 +67,3 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
