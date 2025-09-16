@@ -33,13 +33,16 @@ const ProjectDetails = () => {
   const [taskFilter, setTaskFilter] = useState<TaskStatus | "All">("All");
 
   const { data, isLoading } = UseProjectQuery(projectId!) as {
-    data: {
-      tasks: Task[];
-      project: Project;
-    };
+    data:
+      | {
+          tasks: Task[];
+          project: Project;
+        }
+      | undefined; // allow undefined if access denied
     isLoading: boolean;
   };
 
+  // Loading state
   if (isLoading)
     return (
       <div>
@@ -47,6 +50,21 @@ const ProjectDetails = () => {
       </div>
     );
 
+  // Guard against no access
+  if (!data || !data.project) {
+    return (
+      <div className="text-center py-20">
+        <AlertCircle className="mx-auto mb-4 size-12 text-red-500" />
+        <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-2">
+          You do not have access to this project.
+        </p>
+        <Button onClick={() => navigate(-1)}>Go Back</Button>
+      </div>
+    );
+  }
+
+  // Destructure data safely after access check
   const { project, tasks } = data;
   const projectProgress = getProjectProgress(tasks);
 

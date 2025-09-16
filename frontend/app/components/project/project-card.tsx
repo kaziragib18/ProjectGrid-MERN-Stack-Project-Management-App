@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { cn } from "@/lib/utils";
-import { getTaskStatusColor } from "@/lib";
+import { getProjectStatusColor, getTaskStatusColor } from "@/lib";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { Progress } from "../ui/progress";
@@ -35,7 +35,7 @@ export const ProjectCard = ({
             <span
               className={cn(
                 "text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap",
-                getTaskStatusColor(project.status)
+                getProjectStatusColor(project.status)
               )}
             >
               {project.status}

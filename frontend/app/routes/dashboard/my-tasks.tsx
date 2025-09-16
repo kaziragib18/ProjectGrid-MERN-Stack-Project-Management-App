@@ -362,7 +362,7 @@ const MyTasks = () => {
                         <div>
                           Project:{" "}
                           <span className="font-medium">
-                            {task.project.title}
+                            {task.project?.title || "Project unavailable"}
                           </span>
                         </div>
                         <div className="text-amber-600">
