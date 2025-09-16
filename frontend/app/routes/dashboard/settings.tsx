@@ -676,19 +676,18 @@ const Settings = () => {
             <strong>{selectedMember?.user.name}</strong> from this workspace?
           </p>
           <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setSelectedProject(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowRemoveDialog(false)}
+            >
               Cancel
             </Button>
             <Button
-              type="submit"
-              disabled={isProjectUpdating || !projectForm.formState.isDirty}
-              className={cn(
-                "transition-colors duration-200",
-                !projectForm.formState.isDirty &&
-                  "bg-gray-200 text-gray-500 cursor-not-allowed hover:bg-gray-200"
-              )}
+              variant="destructive"
+              onClick={confirmRemoveMember}
+              disabled={isSubmitting}
             >
-              {isProjectUpdating ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Removing..." : "Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>

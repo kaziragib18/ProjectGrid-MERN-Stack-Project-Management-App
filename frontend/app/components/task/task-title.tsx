@@ -5,13 +5,13 @@ import { Button } from "../ui/button";
 import { useUpdateTaskTitleMutation } from "@/hooks/use-task";
 import { toast } from "sonner";
 
-export const TaskTitle = ({
-  title,
-  taskId,
-}: {
+type TaskTitleProps = {
   title: string;
   taskId: string;
-}) => {
+  className?: string; // <-- Add this
+};
+
+export const TaskTitle = ({ title, taskId, className }: TaskTitleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(title);
 
@@ -46,7 +46,7 @@ export const TaskTitle = ({
   };
 
   return (
-    <div className="flex items-center gap-3 w-full max-w-full">
+    <div className={`flex items-center gap-3 w-full max-w-full ${className}`}>
       {isEditing ? (
         <>
           <Input

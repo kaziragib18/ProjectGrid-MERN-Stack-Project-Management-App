@@ -9,6 +9,7 @@ import {
   addSubTask,
   archivedTask,
   createTask,
+  deleteTask,
   deleteTaskComment,
   getActivityByResourceId,
   getCommentsByTaskId,
@@ -307,4 +308,17 @@ router.delete(
   deleteTaskComment
 );
 
+// ================================
+//  Delete a task by ID
+// ================================
+router.delete(
+  "/:taskId",
+  authMiddleware,
+  validateRequest({
+    params: z.object({
+      taskId: z.string(),
+    }),
+  }),
+  deleteTask
+);
 export default router;

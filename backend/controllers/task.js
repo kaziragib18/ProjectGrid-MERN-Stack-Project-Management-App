@@ -812,6 +812,56 @@ const getMyTasks = async (req, res) => {
   }
 };
 
+// ==================================================
+// Delete Task
+// ==================================================
+const deleteTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    // 1. Find the task
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // 2. Find the project
+    const project = await Project.findById(task.project);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // 3. Check if user is member
+    const isMember = project.members.some(
+      (member) => member.user.toString() === req.user._id.toString()
+    );
+    if (!isMember) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this project" });
+    }
+
+    // 4. Remove task from project's tasks array
+    project.tasks = project.tasks.filter(
+      (tId) => tId.toString() !== task._id.toString()
+    );
+    await project.save();
+
+    // 5. Delete the task
+    await Task.findByIdAndDelete(task._id);
+
+    // 6. Record activity
+    await recordActivity(req.user._id, "deleted_task", "Task", task._id, {
+      description: `Deleted task "${task.title}"`,
+    });
+
+    res.status(200).json({ message: "Task deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export {
   createTask,
   getTaskById,
@@ -830,4 +880,5 @@ export {
   watchTask,
   archivedTask,
   getMyTasks,
+  deleteTask,
 };

@@ -1,3 +1,5 @@
+"use client";
+
 import { CommentSection } from "@/components/task/comment-section";
 import { SubTasksDetails } from "@/components/task/sub-tasks";
 import { TaskActivity } from "@/components/task/task-activity";
@@ -11,28 +13,29 @@ import { BackButton } from "@/components/ui/backButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import CustomLoader from "@/components/ui/customLoader";
+import { AlertTriangle, Eye, EyeOff, Trash2 } from "lucide-react";
 import {
   useArchivedTaskMutation,
   useTaskByIdQuery,
   useWatchTaskMutation,
+  useDeleteTaskMutation,
 } from "@/hooks/use-task";
 import { useAuth } from "@/provider/auth-context";
 import type { Project, Task } from "@/types";
 import { format, formatDistanceToNow } from "date-fns";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const TaskDetails = () => {
   const { user } = useAuth();
-  const { taskId, projectId, workspaceId } = useParams<{
-    taskId: string;
-    projectId: string;
-    workspaceId: string;
-  }>();
+  const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // ✅ Safe hook execution: skip if taskId is undefined
+  // ================================
+  // Fetch task
+  // ================================
   const { data, isLoading } = useTaskByIdQuery(taskId || "") as {
     data: { task: Task; project: Project } | undefined;
     isLoading: boolean;
@@ -41,6 +44,7 @@ const TaskDetails = () => {
   const { mutate: watchTask, isPending: isWatching } = useWatchTaskMutation();
   const { mutate: archivedTask, isPending: isArchived } =
     useArchivedTaskMutation();
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTaskMutation();
 
   if (isLoading) return <CustomLoader />;
 
@@ -61,6 +65,9 @@ const TaskDetails = () => {
 
   const goBack = () => navigate(-1);
 
+  // ================================
+  // Watch/Unwatch Task
+  // ================================
   const handleWatchTask = () => {
     watchTask(
       { taskId: task._id },
@@ -72,6 +79,9 @@ const TaskDetails = () => {
     );
   };
 
+  // ================================
+  // Archive/Unarchive Task
+  // ================================
   const handleArchivedTask = () => {
     archivedTask(
       { taskId: task._id },
@@ -83,7 +93,25 @@ const TaskDetails = () => {
     );
   };
 
-  // Calculate time since creation
+  // ================================
+  // Delete Task
+  // ================================
+  const handleDeleteTask = () => {
+    deleteTask(
+      { taskId: task._id },
+      {
+        onSuccess: () => {
+          toast.success("Task deleted successfully");
+          navigate(-1);
+        },
+        onError: () => toast.error("Failed to delete task"),
+      }
+    );
+  };
+
+  // ================================
+  // Time since creation
+  // ================================
   const createdAtDate = new Date(task.createdAt);
   const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
   const timeSinceCreation = Date.now() - createdAtDate.getTime();
@@ -110,6 +138,7 @@ const TaskDetails = () => {
         </div>
 
         <div className="flex space-x-2 mt-4 md:mt-0">
+          {/* Watch/Unwatch */}
           <Button
             variant="outline"
             size="sm"
@@ -130,6 +159,7 @@ const TaskDetails = () => {
             )}
           </Button>
 
+          {/* Archive/Unarchive */}
           <Button
             variant="outline"
             size="sm"
@@ -143,71 +173,75 @@ const TaskDetails = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left side - 3/4 */}
-        <div className="lg:w-3/4 w-full">
-          <div className="bg-card rounded-lg p-6 shadow-sm mb-6">
-            {/* Top Row */}
-            <div className="flex items-center justify-between mb-2 px-2">
-              {/* Right side: Priority Badge */}
-              <div>
-                <Badge
-                  className={`capitalize ${
-                    task.priority === "High"
-                      ? "bg-red-100 text-red-700"
-                      : task.priority === "Medium"
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-green-100 text-green-700"
-                  }`}
-                >
-                  {task.priority} Priority
-                </Badge>
-              </div>
-
-              {/* Left side: Status Selector, Priority Selector, Trash Button */}
-              <div className="flex items-center space-x-4">
+        {/* Left panel - 3/4 */}
+        <div className="lg:w-3/4 w-full space-y-6">
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            {/* Top Row: Status, Priority, Delete */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <TaskStatusSelector status={task.status} taskId={task._id} />
                 <TaskPrioritySelector
                   priority={task.priority}
                   taskId={task._id}
                 />
-                <Button variant="destructive" size="sm" onClick={() => {}}>
-                  <Trash2 className="size-4" />
-                </Button>
               </div>
+
+              {/* Delete */}
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="size-4" /> Delete
+              </Button>
             </div>
-            <hr className="mb-4" />
+
+            <hr className="mb-6" />
+
             {/* Task Title */}
-            <div className="px-2 mb-6">
-              <TaskTitle title={task.title} taskId={task._id} />
+            <div className="px-2 mb-4">
+              <TaskTitle
+                title={task.title}
+                taskId={task._id}
+                className="text-2xl font-bold"
+              />
             </div>
-            {/* Created at info */}
-            <div className="text-sm text-muted-foreground mb-6 px-2">
+
+            {/* Created at */}
+            <div className="text-sm text-gray-500 mb-6 px-2">
               Created at:{" "}
               {timeSinceCreation < twoDaysInMs
                 ? formatDistanceToNow(createdAtDate, { addSuffix: true })
                 : format(createdAtDate, "PPpp")}
             </div>
+
             {/* Description */}
-            <div className="mb-6 px-2">
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">
+            <div className="mb-6 px-2 bg-white rounded-lg p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
                 Description
               </h3>
-              <TaskDescription
-                description={task.description || ""}
-                taskId={task._id}
-              />
+              {task.description ? (
+                <TaskDescription
+                  description={task.description}
+                  taskId={task._id}
+                />
+              ) : (
+                <p className="text-gray-400 italic">No description provided.</p>
+              )}
             </div>
-            <hr className="mb-6" /> {/* Horizontal line */}
-            {/* Subtasks and Assignees side by side */}
-            <div className="flex flex-col md:flex-row gap-6 px-2">
-              <div className="md:w-1/2 w-full pr-4 md:pr-6 border-r border-gray-300">
+
+            {/* Subtasks and Assignees */}
+            <div className="flex flex-col md:flex-row gap-4 px-2">
+              <div className="md:w-1/2 w-full bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <SubTasksDetails
                   subTasks={task.subtasks || []}
                   taskId={task._id}
                 />
               </div>
 
-              <div className="md:w-1/2 w-full pl-4 md:pl-6">
+              <div className="md:w-1/2 w-full bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <TaskAssigneesSelector
                   task={task}
                   assignees={task.assignees}
@@ -217,6 +251,7 @@ const TaskDetails = () => {
             </div>
           </div>
 
+          {/* Comment Section */}
           {user && (
             <CommentSection
               taskId={task._id}
@@ -226,12 +261,47 @@ const TaskDetails = () => {
           )}
         </div>
 
-        {/* Right side - 1/4 */}
+        {/* Right panel - 1/4 */}
         <div className="lg:w-1/4 w-full flex flex-col gap-6">
           <Watchers watchers={task.watchers || []} />
           <TaskActivity resourceId={task._id} />
         </div>
       </div>
+
+      {/* ================================
+          Delete Task Dialog
+      ================================ */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex items-center mb-4 space-x-3">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+              <h2 className="text-xl font-semibold text-black">
+                Delete this Task?
+              </h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Deleting this task is irreversible and will remove all associated
+              data. Task: <strong>{task.title}</strong>
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteTask}
+                disabled={isDeleting}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

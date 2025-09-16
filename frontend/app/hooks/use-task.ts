@@ -71,7 +71,9 @@ export const useUpdateTaskDescriptionMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string; description: string }) =>
-      updateData(`/tasks/${data.taskId}/description`, { description: data.description }),
+      updateData(`/tasks/${data.taskId}/description`, {
+        description: data.description,
+      }),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
@@ -88,7 +90,9 @@ export const useUpdateTaskAssigneesMutation = () => {
 
   return useMutation({
     mutationFn: (data: { taskId: string; assignees: string[] }) =>
-      updateData(`/tasks/${data.taskId}/assignees`, { assignees: data.assignees }),
+      updateData(`/tasks/${data.taskId}/assignees`, {
+        assignees: data.assignees,
+      }),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
@@ -138,8 +142,14 @@ export const useUpdateSubTaskMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { taskId: string; subTaskId: string; completed: boolean }) =>
-      updateData(`/tasks/${data.taskId}/update-subtask/${data.subTaskId}`, { completed: data.completed }),
+    mutationFn: (data: {
+      taskId: string;
+      subTaskId: string;
+      completed: boolean;
+    }) =>
+      updateData(`/tasks/${data.taskId}/update-subtask/${data.subTaskId}`, {
+        completed: data.completed,
+      }),
 
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["task", data._id] });
@@ -183,11 +193,17 @@ export const useUpdateTaskCommentMutation = () => {
 
   return useMutation({
     mutationFn: (data: { commentId: string; text: string; taskId: string }) =>
-      updateData(`/tasks/${data.taskId}/comments/${data.commentId}`, { text: data.text }),
+      updateData(`/tasks/${data.taskId}/comments/${data.commentId}`, {
+        text: data.text,
+      }),
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", variables.taskId] });
-      queryClient.invalidateQueries({ queryKey: ["task-activity", variables.taskId] });
+      queryClient.invalidateQueries({
+        queryKey: ["comments", variables.taskId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["task-activity", variables.taskId],
+      });
     },
   });
 };
@@ -208,8 +224,12 @@ export const useDeleteCommentMutation = () => {
       deleteData(`/tasks/${taskId}/comments/${commentId}`),
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", variables.taskId] });
-      queryClient.invalidateQueries({ queryKey: ["task-activity", variables.taskId] });
+      queryClient.invalidateQueries({
+        queryKey: ["comments", variables.taskId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["task-activity", variables.taskId],
+      });
     },
 
     onError: (error) => {
@@ -270,5 +290,27 @@ export const useArchivedTasksQuery = () => {
   return useQuery({
     queryKey: ["archived"],
     queryFn: () => fetchData("/tasks/archived"),
+  });
+};
+
+// ================================
+// Hook to delete a task by ID
+// ================================
+export const useDeleteTaskMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { taskId: string }>({
+    mutationFn: ({ taskId }) => deleteData(`/tasks/${taskId}`),
+
+    onSuccess: (_data, variables) => {
+      // Invalidate related queries so UI updates
+      queryClient.invalidateQueries({ queryKey: ["my-tasks", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["task", variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ["archived"] });
+    },
+
+    onError: (error) => {
+      console.error("Failed to delete task:", error);
+    },
   });
 };
