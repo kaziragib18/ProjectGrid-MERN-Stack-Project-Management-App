@@ -14,6 +14,13 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Ensure profilePicture is full URL
+    if (user.profilePicture && !user.profilePicture.startsWith("http")) {
+      user.profilePicture = `${req.protocol}://${req.get("host")}/uploads/${
+        user.profilePicture
+      }`;
+    }
+
     res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -27,32 +34,46 @@ const getUserProfile = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const { name } = req.body;
+    console.log("Received profile update request:", {
+      name,
+      file: req.file?.originalname,
+    });
 
     // Find user
     const user = await User.findById(req.user._id);
 
     if (!user) {
+      console.log("User not found:", req.user._id);
       return res.status(404).json({ message: "User not found" });
     }
 
     // Update name
     user.name = name;
+    console.log("Updated name to:", user.name);
 
     // If a file was uploaded via multer
     if (req.file) {
+      console.log("File uploaded:", req.file.filename);
+
       // Optionally delete previous avatar file if stored locally
       if (
         user.profilePicture &&
-        fs.existsSync(path.join("uploads", user.profilePicture))
+        fs.existsSync(path.join("uploads", path.basename(user.profilePicture)))
       ) {
-        fs.unlinkSync(path.join("uploads", user.profilePicture));
+        fs.unlinkSync(path.join("uploads", path.basename(user.profilePicture)));
+        console.log("Deleted old avatar:", user.profilePicture);
       }
 
-      // Save new profile picture path
-      user.profilePicture = req.file.filename; // multer saves filename by default
+      // Save new profile picture path as a full URL
+      const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${
+        req.file.filename
+      }`;
+      user.profilePicture = fileUrl;
+      console.log("Set new avatar URL:", user.profilePicture);
     }
 
     await user.save();
+    console.log("User profile saved successfully:", user);
 
     res.status(200).json(user);
   } catch (error) {

@@ -1,4 +1,4 @@
-import { fetchData, updateData } from "@/lib/fetch-util";
+import { fetchData, updateData } from "@/lib/fetch-util"; // keep fetchData for profile query
 import type { ChangePasswordFormData } from "@/routes/user/profile";
 import {
   useMutation,
@@ -7,6 +7,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
+import axios from "axios";
 
 const queryKey: QueryKey = ["user"];
 
@@ -37,16 +38,27 @@ export const useChangePassword = () => {
 export const useUpdateUserProfile = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<AxiosResponse<any>, unknown, FormData>({
-    // Use updateData helper (already uses BASE_URL from fetch-util)
-    mutationFn: (formData: FormData) => updateData("/users/profile", formData),
+  // Use full backend URL and multipart/form-data
+  const API_BASE =
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api-v1";
 
-    // On success, refetch user profile query so frontend updates automatically
+  return useMutation<AxiosResponse<any>, unknown, FormData>({
+    mutationFn: (formData: FormData) => {
+      // Get JWT token from localStorage or auth context
+      const token = localStorage.getItem("token");
+      return axios.put(`${API_BASE}/users/profile`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    },
+
+    // Refetch user profile after success
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
 
-    // Optional error handling
     onError: (error: any) => {
       console.error("Error updating profile:", error);
     },

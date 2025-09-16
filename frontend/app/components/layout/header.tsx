@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/provider/auth-context";
 import type { Workspace } from "@/types";
 import { Button } from "../ui/button";
-import { Bell, PlusCircle } from "lucide-react";
+import { Bell, PlusCircle, User, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,14 +37,10 @@ export const Header = ({
   const handleOnClick = (workspace: Workspace) => {
     onWorkspaceSelected(workspace);
 
-    const location = window.location;
-
     if (isWorkspacePage) {
       navigate(`/workspaces/${workspace._id}`);
     } else {
-      const basePath = location.pathname;
-
-      navigate(`${basePath}?workspaceId=${workspace._id}`);
+      navigate(`${window.location.pathname}?workspaceId=${workspace._id}`);
     }
   };
 
@@ -89,7 +85,7 @@ export const Header = ({
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent>
+          <DropdownMenuContent className="w-56">
             <DropdownMenuLabel>Workspace</DropdownMenuLabel>
             <DropdownMenuSeparator />
 
@@ -98,20 +94,24 @@ export const Header = ({
                 <DropdownMenuItem
                   key={ws._id}
                   onClick={() => handleOnClick(ws)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer"
                 >
                   {ws.color && (
                     <WorkspaceAvatar color={ws.color} name={ws.name} />
                   )}
-                  <span className="ml-2">{ws.name}</span>
+                  <span>{ws.name}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={onCreateWorkspace}>
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Create Workspace
+              <DropdownMenuItem
+                onClick={onCreateWorkspace}
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Create Workspace</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
@@ -134,14 +134,31 @@ export const Header = ({
               </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-48 p-1">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link to="/user/profile">Profile</Link>
+
+              {/* Profile */}
+              <DropdownMenuItem
+                asChild
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer"
+              >
+                <Link to="/user/profile">
+                  <User className="w-4 h-4" />
+                  <span>Profile</span>
+                </Link>
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+
+              {/* Logout */}
+              <DropdownMenuItem
+                onClick={logout}
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

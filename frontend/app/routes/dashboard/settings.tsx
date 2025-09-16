@@ -422,12 +422,16 @@ const Settings = () => {
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      {member.user.profilePicture && (
+                      {member.user.profilePicture ? (
                         <img
                           src={member.user.profilePicture}
                           alt={member.user.name}
                           className="w-8 h-8 rounded-full object-cover"
                         />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold text-gray-700">
+                          {member.user.name?.charAt(0).toUpperCase() || "U"}
+                        </div>
                       )}
                       <div>
                         <p className="font-medium">{member.user.name}</p>

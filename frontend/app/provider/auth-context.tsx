@@ -9,6 +9,7 @@ import { publicRoutes } from "@/lib";
 // The context is used to provide authentication data and methods to components throughout the app
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void; // <-- added setUser
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: any) => Promise<void>;
@@ -102,6 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const values = {
     user,
+    setUser, // <-- provide setUser in context
     isAuthenticated,
     isLoading,
     login,

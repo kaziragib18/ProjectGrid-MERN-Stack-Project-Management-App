@@ -2,3 +2,6 @@
 .env
 /dist
 .vscode
+
+# Ignore all files in uploads/profile-pictures
+uploads/profile-pictures/

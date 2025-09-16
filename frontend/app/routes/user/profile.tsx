@@ -8,7 +8,7 @@ import {
   useUserProfileQuery,
   useUpdateUserProfile,
   useChangePassword,
-} from "@/hooks/use-user";
+} from "@/hooks/use-profile";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -72,7 +72,7 @@ const Profile = () => {
     data: User;
     isPending: boolean;
   };
-  const { logout } = useAuth();
+  const { user: authUser, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
   // Local state for password visibility
@@ -140,6 +140,17 @@ const Profile = () => {
   };
 
   // ================================
+  // Determine if form has changes
+  // ================================
+  const hasProfileChanged = () => {
+    if (!user) return false;
+    const currentName = profileForm.getValues("name");
+    const isNameChanged = currentName !== user.name;
+    const isAvatarChanged = !!avatarFile;
+    return isNameChanged || isAvatarChanged;
+  };
+
+  // ================================
   // Profile form submit
   // ================================
   const handleProfileSubmit = (values: ProfileFormData) => {
@@ -147,10 +158,16 @@ const Profile = () => {
     formData.append("name", values.name);
     if (avatarFile) formData.append("profilePicture", avatarFile);
 
-    // Using updated hook with FormData
     updateUserProfile(formData, {
-      onSuccess: () => {
+      onSuccess: (response: any) => {
         toast.success("Profile updated successfully");
+
+        // Update global auth context so header shows new avatar
+        if (response.data) {
+          setUser(response.data);
+        }
+
+        setAvatarFile(null); // reset avatarFile state after save
       },
       onError: (error: any) =>
         toast.error(
@@ -257,7 +274,11 @@ const Profile = () => {
                 </p>
               </div>
 
-              <Button type="submit" disabled={isUpdatingProfile}>
+              {/* Save button disabled if nothing changed */}
+              <Button
+                type="submit"
+                disabled={isUpdatingProfile || !hasProfileChanged()}
+              >
                 {isUpdatingProfile ? (
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : (
