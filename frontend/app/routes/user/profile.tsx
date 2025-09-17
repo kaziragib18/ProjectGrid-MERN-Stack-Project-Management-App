@@ -124,6 +124,11 @@ const Profile = () => {
   }, [user]);
 
   // ================================
+  // Watch name field for live changes
+  // ================================
+  const watchedName = profileForm.watch("name");
+
+  // ================================
   // Handle avatar selection
   // ================================
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,8 +149,7 @@ const Profile = () => {
   // ================================
   const hasProfileChanged = () => {
     if (!user) return false;
-    const currentName = profileForm.getValues("name");
-    const isNameChanged = currentName !== user.name;
+    const isNameChanged = watchedName !== user.name;
     const isAvatarChanged = !!avatarFile;
     return isNameChanged || isAvatarChanged;
   };

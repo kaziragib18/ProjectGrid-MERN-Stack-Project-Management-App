@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const values = {
     user,
-    setUser, // <-- provide setUser in context
+    setUser,
     isAuthenticated,
     isLoading,
     login,
