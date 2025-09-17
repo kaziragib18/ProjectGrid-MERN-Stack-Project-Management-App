@@ -1,6 +1,8 @@
 import Workspace from "../models/workspace.js";
 import Project from "../models/project.js";
 import Task from "../models/task.js";
+import Comment from "../models/comment.js";
+import ActivityLog from "../models/activity.js";
 
 // ================================
 // Create a new project inside a workspace
@@ -185,9 +187,35 @@ const deleteProject = async (req, res) => {
     );
     await workspace.save();
 
+    // Find all tasks belonging to this project
+    const tasks = await Task.find({ project: projectId });
+    const taskIds = tasks.map((task) => task._id);
+
+    // Find all comments related to these tasks
+    const comments = await Comment.find({ task: { $in: taskIds } });
+    const commentIds = comments.map((comment) => comment._id);
+
+    // Delete all comments related to these tasks
+    await Comment.deleteMany({ task: { $in: taskIds } });
+
+    // Delete all activity logs related to project, tasks, or comments
+    await ActivityLog.deleteMany({
+      $or: [
+        { resourceType: "Project", resourceId: projectId },
+        { resourceType: "Task", resourceId: { $in: taskIds } },
+        { resourceType: "Comment", resourceId: { $in: commentIds } },
+      ],
+    });
+
+    // Delete tasks
+    await Task.deleteMany({ project: projectId });
+
+    // Delete the project
     await Project.findByIdAndDelete(projectId);
 
-    res.status(200).json({ message: "Project deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Project and related data deleted successfully" });
   } catch (error) {
     console.error("Error deleting project:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -6,6 +6,8 @@ import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../libs/send-email.js";
 import { recordActivity } from "../libs/index.js";
+import Comment from "../models/comment.js";
+import ActivityLog from "../models/activity.js";
 
 /**
  * CREATE WORKSPACE
@@ -351,7 +353,7 @@ const updateWorkspace = async (req, res) => {
 /**
  * DELETE WORKSPACE
  * - Only owner can delete the workspace
- * - Also deletes associated projects
+ * - Also deletes all associated projects, task related data
  */
 const deleteWorkspace = async (req, res) => {
   try {
@@ -384,6 +386,21 @@ const deleteWorkspace = async (req, res) => {
     const projectIds = projects.map((p) => p._id);
 
     // Delete all tasks related to those projects
+    const tasks = await Task.find({ project: { $in: projectIds } });
+    const taskIds = tasks.map((t) => t._id);
+
+    // Delete all comments related to those tasks
+    await Comment.deleteMany({ task: { $in: taskIds } });
+
+    // Delete all activity logs related to those projects or tasks
+    await ActivityLog.deleteMany({
+      $or: [{ project: { $in: projectIds } }, { task: { $in: taskIds } }],
+    });
+
+    // Delete all workspace invites for this workspace
+    await WorkspaceInvite.deleteMany({ workspace: workspaceId });
+
+    // Delete all tasks in those projects
     await Task.deleteMany({ project: { $in: projectIds } });
 
     // Delete all projects in this workspace
@@ -394,7 +411,7 @@ const deleteWorkspace = async (req, res) => {
 
     res.status(200).json({
       message:
-        "Workspace and all related projects and tasks deleted successfully",
+        "Workspace and all related projects, tasks, comments, activity logs, and invites deleted successfully",
     });
   } catch (error) {
     console.error(error);
