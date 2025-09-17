@@ -34,6 +34,7 @@ export const Header = ({
   const { workspaces } = useLoaderData() as { workspaces: Workspace[] };
   const isWorkspacePage = useLocation().pathname.includes("/workspace");
 
+  // Handle workspace selection click
   const handleOnClick = (workspace: Workspace) => {
     onWorkspaceSelected(workspace);
 
@@ -60,6 +61,13 @@ export const Header = ({
       onWorkspaceSelected(updatedWorkspace);
     }
   }, [workspaces, selectedWorkspace, onWorkspaceSelected]);
+
+  // Auto-select the first workspace if none is selected
+  useEffect(() => {
+    if (!selectedWorkspace && workspaces.length > 0) {
+      onWorkspaceSelected(workspaces[0]);
+    }
+  }, [selectedWorkspace, workspaces, onWorkspaceSelected]);
 
   return (
     <div className="bg-background sticky top-0 z-40 border-b">

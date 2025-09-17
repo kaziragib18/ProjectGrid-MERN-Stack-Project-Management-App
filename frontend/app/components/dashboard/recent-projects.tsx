@@ -1,6 +1,10 @@
 import type { Project } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { getProjectProgress, getTaskStatusColor } from "@/lib";
+import {
+  getProjectProgress,
+  getProjectStatusColor,
+  getTaskStatusColor,
+} from "@/lib";
 import { Link, useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
 import { Progress } from "../ui/progress";
@@ -41,7 +45,7 @@ export const RecentProjects: React.FC<RecentProjectsProps> = ({ data }) => {
                   <span
                     className={cn(
                       "px-2 py-1 text-xs rounded-full",
-                      getTaskStatusColor(project.status)
+                      getProjectStatusColor(project.status)
                     )}
                   >
                     {project.status}

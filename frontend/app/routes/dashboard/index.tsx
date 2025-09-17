@@ -32,8 +32,6 @@ interface WorkspaceStatsData {
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
-  const workspaceId = searchParams.get("workspaceId") ?? "";
-
   const {
     data: workspaces = [],
     isLoading: workspacesLoading,
@@ -44,12 +42,23 @@ const Dashboard = () => {
     isError: boolean;
   };
 
+  // Get workspaceId from URL or use the first workspace as default
+  const workspaceId = useMemo(() => {
+    const paramId = searchParams.get("workspaceId");
+    if (paramId) return paramId;
+    if (workspaces.length > 0) return workspaces[0]._id; // default to first workspace
+    return "";
+  }, [searchParams, workspaces]);
+
+  // Get the current workspace based on workspaceId
   const currentWorkspace = useMemo(() => {
     return workspaces.find((ws) => ws._id === workspaceId);
   }, [workspaces, workspaceId]);
 
+  // Fetch workspace stats
   const { data, isLoading, isError } = useGetWorkspaceStatsQuery(workspaceId);
 
+  // If no workspace is selected and none are available
   if (!workspaceId) {
     return (
       <div className="p-8 text-center text-red-600 font-semibold">
@@ -58,10 +67,12 @@ const Dashboard = () => {
     );
   }
 
+  // Show loader while fetching workspaces or stats
   if (isLoading || workspacesLoading) {
     return <CustomLoader />;
   }
 
+  // Show error if failed to load
   if (isError || !data || workspacesError) {
     return (
       <div className="p-8 text-center text-red-600 font-semibold">
