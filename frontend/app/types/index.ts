@@ -7,7 +7,20 @@ export interface User {
   updatedAt: Date;
   profilePicture?: string;
   currentWorkspaceId?: string;
+  phoneNumber?: string | null;
+  phone2FAVerified?: boolean;
+  is2FAEnabled?: boolean;
 }
+
+// Login response including 2FA info
+export type LoginResponse = {
+  requiresOtp?: boolean;
+  otpToken?: string;
+  userId?: string;
+  token?: string;
+  user?: User; // Reuse existing User interface
+  message?: string;
+};
 
 export interface Workspace {
   _id: string;

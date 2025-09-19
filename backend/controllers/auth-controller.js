@@ -204,6 +204,23 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
+    // After validating password
+    if (user.is2FAEnabled && user.phone2FAVerified) {
+      // Generate temporary token for OTP verification (valid 5 mins)
+      const otpToken = jwt.sign(
+        { userId: user._id, purpose: "2fa-otp" },
+        process.env.JWT_SECRET,
+        { expiresIn: "5m" }
+      );
+
+      return res.status(200).json({
+        message: "2FA enabled. OTP verification required.",
+        requiresOtp: true,
+        otpToken,
+        userId: user._id,
+      });
+    }
+
     const token = jwt.sign(
       { userId: user._id, purpose: "login" },
       process.env.JWT_SECRET,
@@ -224,6 +241,118 @@ const loginUser = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// --- Verify OTP during login (2FA) ---
+const verifyLoginOtp = async (req, res) => {
+  try {
+    const { otp, otpToken } = req.body;
+
+    if (!otp || !otpToken) {
+      return res.status(400).json({ message: "OTP and token are required" });
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(otpToken, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid or expired OTP token" });
+    }
+
+    if (payload.purpose !== "2fa-otp") {
+      return res.status(401).json({ message: "Invalid token purpose" });
+    }
+
+    const user = await User.findById(payload.userId).select(
+      "+twoFAOtp +twoFAOtpExpires +phone2FAVerified"
+    );
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.twoFAOtp || !user.twoFAOtpExpires) {
+      return res.status(400).json({ message: "No OTP requested" });
+    }
+
+    if (user.twoFAOtpExpires < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    if (otp !== user.twoFAOtp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // OTP is valid, clear it
+    user.twoFAOtp = null;
+    user.twoFAOtpExpires = null;
+    await user.save();
+
+    // Generate normal login JWT
+    const token = jwt.sign(
+      { userId: user._id, purpose: "login" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.status(200).json({
+      message: "OTP verified. Login successful.",
+      token,
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Error verifying login OTP:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// --- Verify OTP code (2FA) ---
+const verifyOtp = async (req, res) => {
+  try {
+    const { otp, otpToken } = req.body;
+    if (!otp || !otpToken)
+      return res.status(400).json({ message: "OTP required" });
+
+    // Verify OTP token
+    let payload;
+    try {
+      payload = jwt.verify(otpToken, process.env.JWT_SECRET);
+      if (payload.purpose !== "2fa-otp") throw new Error("Invalid token");
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid or expired OTP token" });
+    }
+
+    const user = await User.findById(payload.userId).select(
+      "+twoFAOtp +twoFAOtpExpires"
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.twoFAOtpExpires < new Date())
+      return res.status(400).json({ message: "OTP expired" });
+    if (user.twoFAOtp !== otp)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    // OTP verified, clear fields and issue login token
+    user.twoFAOtp = null;
+    user.twoFAOtpExpires = null;
+    await user.save();
+
+    const token = jwt.sign(
+      { userId: user._id, purpose: "login" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.status(200).json({ token, user: userData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -431,6 +560,8 @@ const verifyAndResetPassword = async (req, res) => {
 
 export {
   loginUser,
+  verifyLoginOtp,
+  verifyOtp,
   registerUser,
   verifyEmail,
   resetPasswordRequest,

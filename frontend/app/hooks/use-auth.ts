@@ -1,5 +1,6 @@
 import { postData } from "@/lib/fetch-util";
 import type { SignupFormData } from "@/routes/auth/sign-up";
+import type { LoginResponse } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -37,18 +38,14 @@ export const useVerifyEmailMutation = () => {
 };
 
 export const useLoginMutation = () => {
-  return useMutation({
-    // This mutation function sends a POST request to the login endpoint with email and password
-    // It returns a promise that resolves to the response data
-    mutationFn: (data: { email: string; password: string }) =>
-      postData("/auth/login", data),
+  return useMutation<LoginResponse, any, { email: string; password: string }>({
+    mutationFn: (data) => postData("/auth/login", data),
     onSuccess: (data) => {
-      // toast.success("Login successful!");
+      // 2FA handling can now safely use data.requiresOtp
       console.log("Login successful", data);
     },
     onError: (error: any) => {
       const errorMessage = error?.response?.data?.message || "Login failed!";
-      // toast.error(errorMessage);
       console.error("Login error:", errorMessage);
     },
   });

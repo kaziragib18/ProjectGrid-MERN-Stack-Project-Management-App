@@ -1,3 +1,4 @@
+// backend: models/user.js (or models/user.ts if you use TS)
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -29,9 +30,10 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date, // Date of last login
     },
+    // Two-factor fields already present
     is2FAEnabled: {
       type: Boolean,
-      default: false, // Two-factor authentication enabled or not
+      default: false,
     },
     twoFAOtp: {
       type: String,

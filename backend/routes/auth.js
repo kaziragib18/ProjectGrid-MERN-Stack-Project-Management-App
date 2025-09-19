@@ -14,51 +14,47 @@ import {
   resetPasswordRequest,
   verifyAndResetPassword,
   verifyEmail,
+  verifyLoginOtp,
 } from "../controllers/auth-controller.js";
+import { verify2FAOtp } from "../controllers/user-profile.js"; // updated
+import authMiddleware from "../middleware/auth-middleware.js";
 
 const router = express.Router();
-// Import the authentication controller
+
+// Register user
 router.post(
   "/register",
-  validateRequest({
-    // Validate the request body against the registerSchema
-    body: registerSchema,
-  }),
-  // Call the registerUser function from the controller
+  validateRequest({ body: registerSchema }),
   registerUser
 );
 
-router.post(
-  "/login",
-  validateRequest({
-    // Validate the request body against the registerSchema
-    body: loginSchema,
-  }),
-  // Call the registerUser function from the controller
-  loginUser
-);
+// Login
+router.post("/login", validateRequest({ body: loginSchema }), loginUser);
 
+// Verify OTP during login (2FA)
+router.post("/verify-otp", verifyLoginOtp);
+
+// Verify 2FA via email OTP
+router.post("/verify-otp-2fa", authMiddleware, verify2FAOtp);
+
+// Verify email
 router.post(
   "/verify-email",
-  validateRequest({
-    body: verifyEmailSchema,
-  }),
+  validateRequest({ body: verifyEmailSchema }),
   verifyEmail
 );
-// Endpoint for requesting a password reset
-// This endpoint allows users to request a password reset by providing their email address
-// It validates the email format and sends a reset link if the email is registered
-router.post("/reset-password-request", validateRequest({
-  body: emailSchema,
-}), resetPasswordRequest);
 
-// This endpoint allows users to reset their password by providing a new password and a token
-// It validates the token and the new password, then updates the user's password in the database
+// Request password reset
+router.post(
+  "/reset-password-request",
+  validateRequest({ body: emailSchema }),
+  resetPasswordRequest
+);
+
+// Reset password
 router.post(
   "/reset-password",
-  validateRequest({
-    body: resetPasswordSchema,
-  }),
+  validateRequest({ body: resetPasswordSchema }),
   verifyAndResetPassword
 );
 

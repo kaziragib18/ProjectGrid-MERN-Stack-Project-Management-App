@@ -8,12 +8,15 @@ import {
   useUserProfileQuery,
   useUpdateUserProfile,
   useChangePassword,
+  useUpdate2FAPreference,
+  useVerify2FAOtp,
 } from "@/hooks/use-profile";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BackButton } from "@/components/ui/backButton";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -75,13 +78,24 @@ const Profile = () => {
   const { user: authUser, setUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Local state for password visibility
+  // ================================
+  // Password visibility toggles
+  // ================================
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Selected avatar file
+  // Avatar file
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // 2FA / OTP state
+  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [is2FALoading, setIs2FALoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpTimer, setOtpTimer] = useState(150); // 2.30 minute timer for Otp input
+  const [otpExpired, setOtpExpired] = useState(false);
 
   // ================================
   // Forms setup
@@ -101,61 +115,55 @@ const Profile = () => {
   });
 
   // ================================
-  // Hooks for mutation
+  // Mutations
   // ================================
   const { mutate: updateUserProfile, isPending: isUpdatingProfile } =
     useUpdateUserProfile();
-  const {
-    mutate: changePassword,
-    isPending: isChangingPassword,
-    error: passwordError,
-  } = useChangePassword();
+  const { mutate: changePassword, isPending: isChangingPassword } =
+    useChangePassword();
+  const { mutate: update2FA } = useUpdate2FAPreference();
+  const { mutate: verify2FA } = useVerify2FAOtp();
 
   // ================================
-  // Populate profile form when user loads
+  // Populate form & 2FA state on mount
   // ================================
   useEffect(() => {
     if (user) {
       profileForm.reset({
         name: user.name,
-        profilePicture: user.profilePicture,
+        profilePicture: user.profilePicture || "",
       });
+      setIs2FAEnabled(user.is2FAEnabled ?? false);
     }
   }, [user]);
 
   // ================================
-  // Watch name field for live changes
-  // ================================
-  const watchedName = profileForm.watch("name");
-
-  // ================================
-  // Handle avatar selection
+  // Avatar handler
   // ================================
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setAvatarFile(file);
-
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = () =>
       profileForm.setValue("profilePicture", reader.result as string);
-    };
     reader.readAsDataURL(file);
   };
 
   // ================================
-  // Determine if form has changes
+  // Check if form has changes
   // ================================
   const hasProfileChanged = () => {
     if (!user) return false;
-    const isNameChanged = watchedName !== user.name;
-    const isAvatarChanged = !!avatarFile;
-    return isNameChanged || isAvatarChanged;
+
+    const nameChanged = profileForm.getValues("name") !== user.name;
+    const avatarChanged = !!avatarFile;
+
+    return nameChanged || avatarChanged;
   };
 
   // ================================
-  // Profile form submit
+  // Profile submit
   // ================================
   const handleProfileSubmit = (values: ProfileFormData) => {
     const formData = new FormData();
@@ -165,13 +173,14 @@ const Profile = () => {
     updateUserProfile(formData, {
       onSuccess: (response: any) => {
         toast.success("Profile updated successfully");
+        if (response.data) setUser(response.data);
 
-        // Update global auth context so header shows new avatar
-        if (response.data) {
-          setUser(response.data);
-        }
+        profileForm.reset({
+          name: response.data.name,
+          profilePicture: response.data.profilePicture || "",
+        });
 
-        setAvatarFile(null); // reset avatarFile state after save
+        setAvatarFile(null);
       },
       onError: (error: any) =>
         toast.error(
@@ -181,7 +190,7 @@ const Profile = () => {
   };
 
   // ================================
-  // Password form submit
+  // Password submit
   // ================================
   const handlePasswordSubmit = (values: ChangePasswordFormData) => {
     changePassword(values, {
@@ -200,11 +209,90 @@ const Profile = () => {
     });
   };
 
+  // ================================
+  // 2FA toggle
+  // ================================
+  const handle2FAToggle = (enable: boolean) => {
+    setIs2FALoading(true);
+    update2FA(
+      { enable2FA: enable },
+      {
+        onSuccess: (data) => {
+          setIs2FALoading(false);
+          if (data.requiresOtp) {
+            setOtpRequired(true);
+            setOtpTimer(150);
+            setOtpExpired(false);
+            toast("2FA requires OTP verification. Check your email.");
+          } else {
+            setIs2FAEnabled(enable);
+            toast.success(`2FA ${enable ? "enabled" : "disabled"}`);
+          }
+        },
+        onError: (error: any) => {
+          setIs2FALoading(false);
+          toast.error(error.response?.data?.message || "Failed to update 2FA");
+        },
+      }
+    );
+  };
+
+  // ================================
+  // OTP submit
+  // ================================
+  const handleOtpSubmit = () => {
+    if (!otp) return;
+    setOtpError("");
+
+    verify2FA(
+      { otp },
+      {
+        onSuccess: () => {
+          toast.success("2FA enabled successfully!");
+          setIs2FAEnabled(true);
+          setOtpRequired(false);
+          setOtp("");
+        },
+        onError: (error: any) => {
+          setOtpError(
+            error.response?.data?.message || "OTP verification failed"
+          );
+        },
+      }
+    );
+  };
+
+  // ================================
+  // OTP countdown timer
+  // ================================
+  useEffect(() => {
+    if (!otpRequired) return;
+
+    const timer = setInterval(() => {
+      setOtpTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setOtpRequired(false);
+          setOtpExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [otpRequired]);
+
+  const formatTimer = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
   if (isPending) return <CustomLoader />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4 md:px-0">
-      {/* Back button */}
       <div className="flex items-center space-x-4 mb-4">
         <BackButton />
         <h2 className="text-2xl font-semibold">Profile Settings</h2>
@@ -278,10 +366,46 @@ const Profile = () => {
                 </p>
               </div>
 
-              {/* Save button disabled if nothing changed */}
+              {/* 2FA Toggle */}
+              <div className="flex items-center space-x-4 mt-4">
+                <Label>Two-Factor Authentication (2FA)</Label>
+                <Switch
+                  checked={is2FAEnabled}
+                  disabled={otpRequired || is2FALoading}
+                  onCheckedChange={handle2FAToggle}
+                />
+                {is2FALoading && <Loader2 className="animate-spin h-4 w-4" />}
+              </div>
+
+              {/* OTP Input */}
+              {otpRequired && !otpExpired && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                  <Button onClick={handleOtpSubmit}>Verify OTP</Button>
+                  <span className="text-sm text-muted-foreground">
+                    Expires in: {formatTimer(otpTimer)}
+                  </span>
+                  {otpError && (
+                    <p className="text-red-500 text-sm ml-2">{otpError}</p>
+                  )}
+                </div>
+              )}
+
+              {otpExpired && (
+                <p className="text-red-500 text-sm mt-2">
+                  OTP expired. Please toggle 2FA again to request a new code.
+                </p>
+              )}
+
               <Button
                 type="submit"
                 disabled={isUpdatingProfile || !hasProfileChanged()}
+                className="mt-4"
               >
                 {isUpdatingProfile ? (
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
@@ -306,11 +430,11 @@ const Profile = () => {
               onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)}
               className="space-y-4"
             >
-              {passwordError && (
-                <Alert variant="destructive">
+              {passwordForm.formState.errors?.confirmPassword?.message && (
+                <Alert variant="destructive" className="mb-2">
                   <AlertCircle />
                   <AlertDescription>
-                    {(passwordError as any).message}
+                    {passwordForm.formState.errors.confirmPassword.message}
                   </AlertDescription>
                 </Alert>
               )}
