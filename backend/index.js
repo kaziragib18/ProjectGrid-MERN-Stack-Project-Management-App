@@ -16,7 +16,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL, // Allow requests from the frontend URL
     methods: ["GET", "POST", "DELETE", "PUT"], // Allowed HTTP methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+    allowedHeaders: ["Content-Type", "Authorization", "x-otp-token"], // Allowed headers
   })
 ); // Enable CORS for cross-origin requests
 

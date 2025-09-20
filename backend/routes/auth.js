@@ -1,5 +1,4 @@
 import express from "express";
-import { z } from "zod";
 import { validateRequest } from "zod-express-middleware";
 import {
   emailSchema,
@@ -16,8 +15,6 @@ import {
   verifyEmail,
   verifyLoginOtp,
 } from "../controllers/auth-controller.js";
-import { verify2FAOtp } from "../controllers/user-profile.js"; // updated
-import authMiddleware from "../middleware/auth-middleware.js";
 
 const router = express.Router();
 
@@ -32,10 +29,7 @@ router.post(
 router.post("/login", validateRequest({ body: loginSchema }), loginUser);
 
 // Verify OTP during login (2FA)
-router.post("/verify-otp", verifyLoginOtp);
-
-// Verify 2FA via email OTP
-router.post("/verify-otp-2fa", authMiddleware, verify2FAOtp);
+router.post("/verify-otp-2fa", verifyLoginOtp);
 
 // Verify email
 router.post(
