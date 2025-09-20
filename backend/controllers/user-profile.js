@@ -122,7 +122,7 @@ const getTwoFAEmailTemplate = (code, name) => `
       </div>
       
       <p style="color:#6b7280; font-size:13px; margin-top:10px;">
-        This code will expire in <b>5 minutes</b>. Do not share it with anyone.
+        This code will expire in <b>2 minutes 30 seconds</b>. Do not share it with anyone.
       </p>
 
       <hr style="margin:30px 0; border:none; border-top:1px solid #e5e7eb;">

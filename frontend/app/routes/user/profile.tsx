@@ -94,7 +94,7 @@ const Profile = () => {
   const [otp, setOtp] = useState("");
   const [is2FALoading, setIs2FALoading] = useState(false);
   const [otpError, setOtpError] = useState("");
-  const [otpTimer, setOtpTimer] = useState(150); // 2.30 minute timer for Otp input
+  const [otpTimer, setOtpTimer] = useState(150);
   const [otpExpired, setOtpExpired] = useState(false);
 
   // ================================
@@ -146,20 +146,10 @@ const Profile = () => {
     setAvatarFile(file);
     const reader = new FileReader();
     reader.onloadend = () =>
-      profileForm.setValue("profilePicture", reader.result as string);
+      profileForm.setValue("profilePicture", reader.result as string, {
+        shouldDirty: true,
+      });
     reader.readAsDataURL(file);
-  };
-
-  // ================================
-  // Check if form has changes
-  // ================================
-  const hasProfileChanged = () => {
-    if (!user) return false;
-
-    const nameChanged = profileForm.getValues("name") !== user.name;
-    const avatarChanged = !!avatarFile;
-
-    return nameChanged || avatarChanged;
   };
 
   // ================================
@@ -404,7 +394,7 @@ const Profile = () => {
 
               <Button
                 type="submit"
-                disabled={isUpdatingProfile || !hasProfileChanged()}
+                disabled={isUpdatingProfile || !profileForm.formState.isDirty}
                 className="mt-4"
               >
                 {isUpdatingProfile ? (
