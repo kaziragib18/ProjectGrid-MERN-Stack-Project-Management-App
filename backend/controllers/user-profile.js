@@ -95,39 +95,6 @@ const changePassword = async (req, res) => {
   }
 };
 
-/**
- * ================================
- * 2FA email template
- * ================================
- */
-const getTwoFAEmailTemplate = (code, name) => `
-  <div style="font-family: Arial, sans-serif; background-color:#f9fafb; padding:30px;">
-    <div style="max-width:600px; margin:auto; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:40px; text-align:center;">
-      <h2 style="color:#0d9488; margin-bottom:12px;">ProjectGrid 2FA Code</h2>
-      <p style="color:#4b5563; font-size:16px; margin-bottom:24px;">
-        Hi <b>${name}</b>,<br>
-        Use the following code for Two-Factor Authentication (2FA):
-      </p>
-      <div style="
-          display:inline-block;
-          background:#f1f3f5;
-          padding:20px 30px;
-          font-size:28px;
-          font-weight:bold;
-          letter-spacing:6px;
-          border-radius:8px;
-          margin-bottom:20px;
-      ">
-        ${code}
-      </div>
-      <p style="color:#6b7280; font-size:13px; margin-top:10px;">
-        This code will expire in <b>5 minutes</b>. Do not share it with anyone.
-      </p>
-      <hr style="margin:30px 0; border:none; border-top:1px solid #e5e7eb;">
-      <p style="color:#9ca3af; font-size:12px;">&copy; 2025 ProjectGrid. </p>
-    </div>
-  </div>
-`;
 
 /**
  * ================================
@@ -216,6 +183,8 @@ const verify2FAOtp = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 export {
   getUserProfile,
   updateUserProfile,
