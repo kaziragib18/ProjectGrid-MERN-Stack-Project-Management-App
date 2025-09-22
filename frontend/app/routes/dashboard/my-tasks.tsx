@@ -200,7 +200,7 @@ const MyTasks = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6 px-4">
       {/* Header with toggle, search, filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">My Tasks</h1>
@@ -409,73 +409,143 @@ const MyTasks = () => {
       {/* === BOARD VIEW === */}
       {tab === "board" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { title: "To Do", tasks: todoTasks },
-            { title: "In Progress", tasks: inProgressTasks },
-            { title: "Completed", tasks: completedTasks },
-          ].map(({ title, tasks }) => (
-            <div key={title} className="mb-4">
-              <Card className="flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    {title}
-                    <Badge variant="outline">{tasks.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-3">
-                  {tasks.map((task) => {
-                    const priorityBadge = task.priority
-                      ? getPriorityBadgeProps(task.priority)
-                      : null;
-                    const statusBadge = getStatusBadgeProps(task.status);
-                    return (
-                      <Card
-                        key={task._id}
-                        className="p-4 border rounded-md shadow-sm hover:shadow-md transition-shadow mb-4 cursor-pointer"
-                        onClick={() => goToTask(task)}
-                      >
-                        <div className="flex flex-col space-y-2">
-                          <h3 className="font-medium">{task.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-3">
-                            {task.description || "No description"}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge
-                              variant={statusBadge.variant}
-                              className={statusBadge.className}
-                            >
-                              {task.status}
-                            </Badge>
-                            {priorityBadge && (
-                              <Badge
-                                variant={priorityBadge.variant}
-                                className={priorityBadge.className}
-                              >
-                                {task.priority}
-                              </Badge>
-                            )}
-                            {task.isArchived && (
-                              <Badge variant="outline">Archived</Badge>
-                            )}
-                          </div>
-                          {task.dueDate && (
-                            <div className="text-xs text-muted-foreground">
-                              Due: {format(task.dueDate, "PPPP")}
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    );
-                  })}
-                  {tasks.length === 0 && (
-                    <div className="text-center text-sm text-muted-foreground py-4">
-                      No tasks in this column.
+          {/* To Do */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                To Do{" "}
+                <Badge variant="secondary" className="ml-2">
+                  {todoTasks.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {todoTasks.map((task) => {
+                const priorityBadge = task.priority
+                  ? getPriorityBadgeProps(task.priority)
+                  : null;
+                return (
+                  <div
+                    key={task._id}
+                    onClick={() => goToTask(task)}
+                    className="p-3 bg-muted rounded cursor-pointer hover:bg-muted/70"
+                  >
+                    <div className="font-semibold">{task.title}</div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {priorityBadge && (
+                        <Badge
+                          variant={priorityBadge.variant}
+                          className={priorityBadge.className}
+                        >
+                          {task.priority}
+                        </Badge>
+                      )}
+                      {task.isArchived && (
+                        <Badge variant="outline">Archived</Badge>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                  </div>
+                );
+              })}
+              {todoTasks.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No tasks in To Do.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* In Progress */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                In Progress{" "}
+                <Badge variant="secondary" className="ml-2">
+                  {inProgressTasks.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {inProgressTasks.map((task) => {
+                const priorityBadge = task.priority
+                  ? getPriorityBadgeProps(task.priority)
+                  : null;
+                return (
+                  <div
+                    key={task._id}
+                    onClick={() => goToTask(task)}
+                    className="p-3 bg-muted rounded cursor-pointer hover:bg-muted/70"
+                  >
+                    <div className="font-semibold">{task.title}</div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {priorityBadge && (
+                        <Badge
+                          variant={priorityBadge.variant}
+                          className={priorityBadge.className}
+                        >
+                          {task.priority}
+                        </Badge>
+                      )}
+                      {task.isArchived && (
+                        <Badge variant="outline">Archived</Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {inProgressTasks.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No tasks in progress.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Completed */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Completed{" "}
+                <Badge variant="secondary" className="ml-2">
+                  {completedTasks.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {completedTasks.map((task) => {
+                const priorityBadge = task.priority
+                  ? getPriorityBadgeProps(task.priority)
+                  : null;
+                return (
+                  <div
+                    key={task._id}
+                    onClick={() => goToTask(task)}
+                    className="p-3 bg-muted rounded cursor-pointer hover:bg-muted/70"
+                  >
+                    <div className="font-semibold">{task.title}</div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {priorityBadge && (
+                        <Badge
+                          variant={priorityBadge.variant}
+                          className={priorityBadge.className}
+                        >
+                          {task.priority}
+                        </Badge>
+                      )}
+                      {task.isArchived && (
+                        <Badge variant="outline">Archived</Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {completedTasks.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No completed tasks.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

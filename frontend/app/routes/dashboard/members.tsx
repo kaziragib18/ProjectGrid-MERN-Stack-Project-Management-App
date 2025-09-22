@@ -63,7 +63,7 @@ const Members = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
         <h1 className="text-2xl font-bold">Workspace Members</h1>
 
         {/* Search Input with icon */}

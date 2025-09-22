@@ -285,17 +285,17 @@ const Settings = () => {
   if (loading) return <CustomLoader />;
 
   return (
-    <main className="max-w-6xl mx-auto py-8 px-4 space-y-6">
+    <main className="max-w-6xl mx-auto py-6 px-4 sm:py-4 sm:px-4 lg:px-4 space-y-4">
       <header className="mb-6 flex items-center space-x-3">
         <SettingsIcon className="w-7 h-7 text-teal-600" />
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b mb-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 border-b mb-6 overflow-x-auto">
         <button
           className={cn(
-            "py-2 px-4 font-semibold transition-colors",
+            "py-2 px-4 font-semibold transition-colors whitespace-nowrap",
             activeTab === "workspace"
               ? "border-b-2 border-teal-600 text-teal-600"
               : "text-gray-500 hover:text-teal-600"
@@ -306,7 +306,7 @@ const Settings = () => {
         </button>
         <button
           className={cn(
-            "py-2 px-4 font-semibold transition-colors",
+            "py-2 px-4 font-semibold transition-colors whitespace-nowrap",
             activeTab === "project"
               ? "border-b-2 border-teal-600 text-teal-600"
               : "text-gray-500 hover:text-teal-600"
@@ -321,7 +321,7 @@ const Settings = () => {
       {activeTab === "workspace" && (
         <section className="space-y-6">
           {/* Workspace Form */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white">
+          <div className="border rounded-lg p-4 sm:p-6 shadow-sm bg-white">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -334,7 +334,11 @@ const Settings = () => {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Workspace Name" />
+                        <Input
+                          {...field}
+                          placeholder="Workspace Name"
+                          className="w-full"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,6 +355,7 @@ const Settings = () => {
                           {...field}
                           placeholder="Workspace Description"
                           rows={3}
+                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -410,8 +415,10 @@ const Settings = () => {
           </div>
 
           {/* Members List */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white">
-            <h2 className="text-xl font-semibold mb-4">Workspace Members</h2>
+          <div className="border rounded-lg p-4 sm:p-6 shadow-sm bg-white overflow-hidden">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">
+              Workspace Members
+            </h2>
             {members.length === 0 ? (
               <p className="text-muted-foreground">No members found.</p>
             ) : (
@@ -419,7 +426,7 @@ const Settings = () => {
                 {members.map((member) => (
                   <li
                     key={member.user._id}
-                    className="flex items-center justify-between"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0"
                   >
                     <div className="flex items-center gap-3">
                       {member.user.profilePicture ? (
@@ -433,14 +440,16 @@ const Settings = () => {
                           {member.user.name?.charAt(0).toUpperCase() || "U"}
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium">{member.user.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">
+                          {member.user.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
                           {member.user.email}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end">
                       <span
                         className={cn(
                           "text-sm font-semibold px-2 py-1 rounded-full",
@@ -453,7 +462,7 @@ const Settings = () => {
                       </span>
                       {currentUserRole === "owner" &&
                         member.role !== "owner" && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                             <Button
                               size="sm"
                               variant="secondary"
@@ -478,10 +487,10 @@ const Settings = () => {
           </div>
 
           {/* Danger Zone */}
-          <div className="border rounded-lg p-6 shadow-sm bg-white">
-            <div className="flex items-center mb-4 space-x-3">
+          <div className="border rounded-lg p-4 sm:p-6 shadow-sm bg-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-red-600" />
-              <h2 className="text-xl font-semibold text-red-600">
+              <h2 className="text-lg sm:text-xl font-semibold text-red-600">
                 Danger Zone
               </h2>
             </div>
@@ -503,7 +512,7 @@ const Settings = () => {
 
       {/* ================= Project Tab ================= */}
       {activeTab === "project" && (
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.length === 0 ? (
             <p className="text-muted-foreground col-span-full text-center py-6">
               No projects have been created in this workspace.
@@ -512,12 +521,12 @@ const Settings = () => {
             projects.map((project) => (
               <div
                 key={project._id}
-                className="border p-4 rounded-md shadow-sm flex flex-col justify-between"
+                className="border p-4 sm:p-6 rounded-md shadow-sm flex flex-col justify-between min-h-[150px] bg-white"
               >
                 <div>
-                  <p className="font-medium">{project.title}</p>
+                  <p className="font-medium truncate">{project.title}</p>
                   {project.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
+                    <p className="text-sm text-muted-foreground line-clamp-3 mt-1">
                       {project.description}
                     </p>
                   )}
@@ -535,7 +544,7 @@ const Settings = () => {
                   >
                     {project.status}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                     {["owner", "admin"].includes(currentUserRole!) && (
                       <>
                         <Button
@@ -567,7 +576,7 @@ const Settings = () => {
         open={!!selectedProject}
         onOpenChange={() => setSelectedProject(null)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-lg mx-auto w-full sm:px-6">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
@@ -583,7 +592,7 @@ const Settings = () => {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -596,7 +605,7 @@ const Settings = () => {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} />
+                      <Textarea {...field} rows={3} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -610,7 +619,7 @@ const Settings = () => {
                     <FormLabel>Status</FormLabel>
                     <FormControl>
                       <select {...field} className="border p-2 rounded w-full">
-                        <option value="ToDo">To Do</option>
+                        <option value="To Do">To Do</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Completed">Completed</option>
                       </select>
@@ -643,7 +652,7 @@ const Settings = () => {
         open={showDeleteProjectDialog}
         onOpenChange={() => setShowDeleteProjectDialog(false)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto w-full sm:px-6">
           <DialogHeader>
             <DialogTitle>Delete Project</DialogTitle>
           </DialogHeader>
@@ -652,7 +661,7 @@ const Settings = () => {
             <strong>{projectToDelete?.title}</strong>? This action cannot be
             undone.
           </p>
-          <DialogFooter className="flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setShowDeleteProjectDialog(false)}
@@ -671,15 +680,15 @@ const Settings = () => {
         open={showRemoveDialog}
         onOpenChange={() => setShowRemoveDialog(false)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto w-full sm:px-6">
           <DialogHeader>
             <DialogTitle>Remove Member?</DialogTitle>
           </DialogHeader>
-          <p>
+          <p className="mt-2">
             Are you sure you want to remove{" "}
             <strong>{selectedMember?.user.name}</strong> from this workspace?
           </p>
-          <DialogFooter className="flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setShowRemoveDialog(false)}
@@ -702,15 +711,15 @@ const Settings = () => {
         open={showTransferDialog}
         onOpenChange={() => setShowTransferDialog(false)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto w-full sm:px-6">
           <DialogHeader>
             <DialogTitle>Transfer Ownership?</DialogTitle>
           </DialogHeader>
-          <p>
+          <p className="mt-2">
             Are you sure you want to transfer ownership to{" "}
             <strong>{transferTarget?.user.name}</strong>?
           </p>
-          <DialogFooter className="flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setShowTransferDialog(false)}
@@ -733,15 +742,15 @@ const Settings = () => {
         open={showDeleteDialog}
         onOpenChange={() => setShowDeleteDialog(false)}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md mx-auto w-full sm:px-6">
           <DialogHeader>
             <DialogTitle>Delete Workspace?</DialogTitle>
           </DialogHeader>
-          <p>
+          <p className="mt-2">
             Are you sure you want to delete this workspace? This action cannot
             be undone.
           </p>
-          <DialogFooter className="flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}

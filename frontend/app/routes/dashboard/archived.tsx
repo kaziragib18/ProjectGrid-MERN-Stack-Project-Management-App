@@ -150,7 +150,7 @@ const Archived = () => {
   };
 
   return (
-    <div className="p-6 w-full max-w-full mx-auto">
+    <div className="p-4 w-full max-w-full mx-auto">
       <h1 className="text-3xl font-bold mb-6">Archived Tasks</h1>
 
       {isLoading ? (
