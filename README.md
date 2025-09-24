@@ -112,15 +112,18 @@ A **cloud-based Project & Task Management platform** built with the **MERN Stack
 
 ### Run Locally
 
+```bash
+
 1. Clone the repository:
 
-```bash
 git clone https://github.com/kaziragib18/ProjectGrid-MERN-Stack-Project-Management-App.git
 
 2. Navigate into the project:
+
 cd ProjectGrid-MERN-Stack-Project-Management-App
 
 3. Install dependencies in both backend and froentend folder:
+
 npm install
 
 4. Set up environment variables using .env file:
@@ -137,10 +140,11 @@ FROM_EMAIL=Registered_email
 
 npm run dev
 
+```
 
 ---
-### Collaboration
 
+### Collaboration
 
 Feel free to fork the repository and create a feature branch for contributions.
 
@@ -148,6 +152,4 @@ Submit a pull request for review.
 
 Add issues for bugs or feature requests.
 
-⭐ If you like this project, don’t forget to give it a star on GitHub!
-
-```
+## ⭐ If you like this project, don’t forget to give it a star on GitHub!
