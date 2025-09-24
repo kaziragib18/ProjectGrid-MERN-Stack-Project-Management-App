@@ -1,4 +1,4 @@
-# 🚀 ProjectGrid Management Application
+# ProjectGrid Management Application
 
 A **cloud-based Project & Task Management platform** built with the **MERN Stack** (MongoDB, Express, React, Node.js) and modern tooling for scalable, secure, and user-friendly collaboration.
 
