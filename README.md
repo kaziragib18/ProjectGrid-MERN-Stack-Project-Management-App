@@ -3,6 +3,10 @@
 A **cloud-based Project & Task Management platform** built with the **MERN Stack** (MongoDB, Express, React, Node.js) and modern tooling for scalable, secure, and user-friendly collaboration.
 
 ---
+## ✨ Showcase
+
+[[Watch the project demonstration video]](https://youtu.be/17gwntz88vk)
+
 
 ## ✨ Features
 
