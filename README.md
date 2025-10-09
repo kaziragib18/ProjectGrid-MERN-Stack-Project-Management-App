@@ -3,10 +3,10 @@
 A **cloud-based Project & Task Management platform** built with the **MERN Stack** (MongoDB, Express, React, Node.js) and modern tooling for scalable, secure, and user-friendly collaboration.
 
 ---
+
 ## ✨ Showcase
 
 [[Watch the project demonstration video]](https://youtu.be/17gwntz88vk)
-
 
 ## ✨ Features
 
@@ -145,6 +145,68 @@ FROM_EMAIL=Registered_email
 npm run dev
 
 ```
+
+---
+
+🐳 Run with Docker
+
+ProjectGrid is fully Dockerized for easier local development and testing. You can spin up the entire stack (frontend + backend) with one command using Docker Compose.
+
+📦 Requirements
+
+Make sure you have these installed:
+
+Docker
+
+Docker Compose
+(usually bundled with Docker Desktop)
+
+🗂️ Folder Structure:
+
+ProjectGrid-MERN-Stack-Project-Management-App/
+│
+├── backend/
+│ ├── Dockerfile
+│ ├── .dockerignore
+│ └── .env
+│
+├── frontend/
+│ ├── Dockerfile
+│ ├── .dockerignore
+│ └── .env
+│
+├── docker-compose.yml
+└── README.md
+
+⚙️ Environment Variables
+backend/.env
+
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+SEND_GRID_API_KEY=your_sendgrid_api_key
+ARCJET_KEY=your_arcjet_key
+FROM_EMAIL=your_verified_sendgrid_email
+FRONTEND_URL=http://localhost:3000
+
+frontend/.env
+
+VITE_API_URL=http://backend:5000/api-v1
+
+🚀 Run the App with Docker
+
+In the root directory, run:
+
+docker-compose up --build
+
+---
+
+🔄 Rebuilding After Code Changes
+
+To rebuild containers after making changes to Dockerfiles or dependencies:
+
+docker-compose down
+docker-compose up --build
 
 ---
 
