@@ -5,3 +5,6 @@
 
 # Ignore all files in uploads/profile-pictures
 uploads/
+
+# .gitignore
+coverage/
