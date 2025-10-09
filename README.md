@@ -163,20 +163,24 @@ Docker Compose
 
 🗂️ Folder Structure:
 
+```text
 ProjectGrid-MERN-Stack-Project-Management-App/
 │
 ├── backend/
-│ ├── Dockerfile
-│ ├── .dockerignore
-│ └── .env
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   └── .env
 │
 ├── frontend/
-│ ├── Dockerfile
-│ ├── .dockerignore
-│ └── .env
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   └── .env
 │
 ├── docker-compose.yml
 └── README.md
+```
+
+---
 
 ⚙️ Environment Variables
 backend/.env
